@@ -1,5 +1,7 @@
 @echo off
-set APP_DIR=C:\microflyton
+setlocal EnableExtensions
+
+set "APP_DIR=C:\microflyton"
 
 where python >nul 2>nul
 if errorlevel 1 (
@@ -14,3 +16,5 @@ if not exist "%APP_DIR%\runtime" mkdir "%APP_DIR%\runtime"
 echo ok > "%APP_DIR%\runtime\installed.flag"
 
 echo Installation completed.
+echo Installed to: %APP_DIR%
+exit /b 0

@@ -37,7 +37,7 @@ C:\microflyton\scripts\cleanup_uninstall.bat
 
 ## Access
 
-http://127.0.0.1:8080/pages/index.html
+http://127.0.0.1:8080/Client/pages/index.html
 
 Login:
 - username: admin

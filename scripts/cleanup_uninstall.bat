@@ -11,3 +11,4 @@ if exist "%APP_DIR%" (
 )
 
 echo MicroFlyton uninstalled.
+exit /b 0
