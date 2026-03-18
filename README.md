@@ -1,8 +1,11 @@
 # MicroFlyton (Windows)
 
-## Prerequisite
+## Prerequisites
 
+Install Git:
 winget install --id Git.Git -e --source winget
+
+Install Python:
 winget install --id Python.Python.3.11 -e --source winget
 
 ## 1. Setup (Clone + Install)
@@ -16,9 +19,17 @@ cd C:\microflyton
 
 C:\microflyton\scripts\run_microflyton.bat
 
+This will:
+- start the local server
+- open MicroFlyton automatically in the browser
+
 ## 3. Enable Startup Launch
 
 C:\microflyton\scripts\register_startup.bat
+
+This will:
+- start MicroFlyton automatically when Windows starts
+- open it automatically in the browser
 
 ## 4. Uninstall
 
