@@ -8,6 +8,9 @@ winget install --id Git.Git -e --source winget
 Install Python:
 winget install --id Python.Python.3.11 -e --source winget
 
+Install SQLite:
+winget install SQLite.SQLite -e --source winget
+
 ## 1. Setup (Clone + Install)
 
 cd C:\
