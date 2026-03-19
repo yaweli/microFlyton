@@ -35,6 +35,10 @@ This will:
 
 C:\microflyton\scripts\cleanup_uninstall.bat
 
+## 5. sql
+
+C:\microflyton\scripts\kic.bat
+
 ## Access
 
 http://127.0.0.1:8080/Client/pages/index.html
