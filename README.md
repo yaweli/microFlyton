@@ -1,5 +1,17 @@
 # MicroFlyton (Windows)
 
+Micro Flyton is a thin version of Flyton
+
+Where MicroFlyton is thin and run on a Windows stations The flyton project is a aserver based Software programming Methodology based on Python and an easy style of writing code.
+
+
+# References
+
+MicroFlyton : https://github.com/yaweli/microFlyton
+
+Flyton : https://github.com/yaweli/flyton
+
+
 ## Prerequisites
 
 Install Git:
