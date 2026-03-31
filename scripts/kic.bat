@@ -1,8 +1,8 @@
 @echo off
 setlocal EnableExtensions EnableDelayedExpansion
+
 set "SCRIPT_DIR=%~dp0"
 for %%I in ("%SCRIPT_DIR%..") do set "APP_DIR=%%~fI"
-title Command Prompt - kic
 
 :menu
 call :load_env
@@ -11,28 +11,41 @@ echo ==================================
 echo KIC Console
 echo Project: %APP_DIR%
 echo Database: %DB_PATH%
-echo Version: 2026.03.30
+echo Version: 2026.03.31
 echo ==================================
 echo.
 echo Commands:
 echo s  - sql      - Open SQLite terminal
-echo I  - install  - Prepare folders and DB path
-echo R  - run      - Run MicroFlyton service
-echo U  - pull     - Pull latest code from GitHub safely
-echo RG - register - Register MicroFlyton in Windows startup
-echo delete - Delete and uninstall MicroFlyton code
+echo i  - install  - Prepare folders and DB path
+echo r  - run      - Run MicroFlyton service
+echo u  - pull     - Pull latest code from GitHub safely
+echo rg - register - Register MicroFlyton in Windows startup
+echo delete        - Delete and uninstall MicroFlyton code
 echo.
 echo Press Enter on empty command to exit.
 echo.
+
 set "CMD_IN="
 set /p "CMD_IN=Enter command: "
 if not defined CMD_IN exit /b 0
-if /i "!CMD_IN!"=="sql" goto run_sql
-if /i "!CMD_IN!"=="install" goto install_app
-if /i "!CMD_IN!"=="run" goto run_app
+
+if /i "!CMD_IN!"=="s"        goto run_sql
+if /i "!CMD_IN!"=="sql"      goto run_sql
+
+if /i "!CMD_IN!"=="i"        goto install_app
+if /i "!CMD_IN!"=="install"  goto install_app
+
+if /i "!CMD_IN!"=="r"        goto run_app
+if /i "!CMD_IN!"=="run"      goto run_app
+
+if /i "!CMD_IN!"=="u"        goto pull_app
+if /i "!CMD_IN!"=="pull"     goto pull_app
+
+if /i "!CMD_IN!"=="rg"       goto register_app
 if /i "!CMD_IN!"=="register" goto register_app
-if /i "!CMD_IN!"=="delete" goto delete_app
-if /i "!CMD_IN!"=="pull" goto pull_app
+
+if /i "!CMD_IN!"=="delete"   goto delete_app
+
 echo.
 echo Unknown command: !CMD_IN!
 pause
@@ -42,19 +55,30 @@ goto menu
 set "ENV_FILE=%APP_DIR%\.env.micro"
 set "DB_PATH_RAW=C:\sqlite_microflyton\microflyton.db"
 set "PORT=8080"
+
 if exist "%ENV_FILE%" (
   for /f "usebackq tokens=1,* delims==" %%A in ("%ENV_FILE%") do (
     if /i "%%~A"=="DB_PATH" set "DB_PATH_RAW=%%~B"
     if /i "%%~A"=="PORT" set "PORT=%%~B"
   )
 )
+
 set "FIRST_CHAR=%DB_PATH_RAW:~0,1%"
 if "%FIRST_CHAR%"=="." (
   set "DB_PATH=%APP_DIR%\%DB_PATH_RAW%"
 ) else (
   set "DB_PATH=%DB_PATH_RAW%"
 )
+
 for %%I in ("%DB_PATH%") do set "DB_PATH=%%~fI"
+
+rem Fallback fix: if .env.micro still points to old local DB path, prefer the new external DB
+if not exist "%DB_PATH%" (
+  if exist "C:\sqlite_microflyton\microflyton.db" (
+    set "DB_PATH=C:\sqlite_microflyton\microflyton.db"
+  )
+)
+
 exit /b 0
 
 :install_app
@@ -78,7 +102,6 @@ echo ************************************************************
 echo WARNING: You are about to delete the MicroFlyton code folder.
 echo Startup registration will be removed.
 echo The external database will be kept.
-echo This console will close to finish uninstall safely.
 echo ************************************************************
 echo.
 set "CONFIRM_DELETE="
@@ -88,8 +111,8 @@ if /i not "!CONFIRM_DELETE!"=="y" (
   pause
   goto menu
 )
-start "" /min cmd /c ""%SCRIPT_DIR%cleanup_uninstall.bat""
-exit
+call "%SCRIPT_DIR%cleanup_uninstall.bat"
+exit /b 0
 
 :pull_app
 where git >nul 2>nul
@@ -100,6 +123,7 @@ if errorlevel 1 (
   pause
   goto menu
 )
+
 if not exist "%APP_DIR%\.git" (
   echo.
   echo ERROR: This folder is not a git working tree.
@@ -155,9 +179,11 @@ goto menu
 
 :run_sql
 call :load_env
+
 set "SQLITE_EXE="
 where sqlite3 >nul 2>nul
 if not errorlevel 1 set "SQLITE_EXE=sqlite3"
+
 if not defined SQLITE_EXE (
   echo.
   echo ERROR: sqlite3 was not found in PATH.
@@ -166,6 +192,14 @@ if not defined SQLITE_EXE (
   pause
   goto menu
 )
+
+rem Extra hard fallback for SQL command specifically
+if not exist "%DB_PATH%" (
+  if exist "C:\sqlite_microflyton\microflyton.db" (
+    set "DB_PATH=C:\sqlite_microflyton\microflyton.db"
+  )
+)
+
 if not exist "%DB_PATH%" (
   echo.
   echo WARNING: Database file does not exist yet:
@@ -174,5 +208,17 @@ if not exist "%DB_PATH%" (
   choice /c YN /m "Continue anyway"
   if errorlevel 2 goto menu
 )
+
+echo.
+echo Opening SQLite:
+echo %DB_PATH%
+echo.
+echo Type .tables to list tables
+echo Type .schema to view schema
+echo Type .exit to return to KIC Console
+echo.
 "%SQLITE_EXE%" "%DB_PATH%"
+echo.
+echo SQLite session closed.
+pause
 goto menu
