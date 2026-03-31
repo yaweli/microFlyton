@@ -3,3 +3,6 @@ __pycache__/
 *.pyo
 server/logs/
 server/data/*.db
+C__/
+*.db
+server/data/*.db
