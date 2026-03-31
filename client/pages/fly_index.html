@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MicroFlyton Login</title>
+  <link href="../../lib/bootstrap.min.css" rel="stylesheet">
+  <script src="../../lib/bootstrap.bundle.min.js"></script>
+  <script src="../../lib/kicdev.server.js"></script>
+  <script src="../../lib/kicdev.bs5.js"></script>
+  <style>
+    body { background-color: #f9f9f9; font-family: Arial, sans-serif; }
+    .login-container { max-width: 420px; margin: 50px auto; padding: 24px; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+    .subtitle { color: #666; font-size: 14px; margin-bottom: 16px; }
+    .error-box { min-height: 24px; color: #b00020; margin-top: 12px; }
+  </style>
+  <script>
+    async function check_user(meth, inp) {
+      const responseData = await call_server(meth, inp);
+      const errBox = go_el('errbox');
+      errBox.innerText = '';
+      if (!responseData || !responseData.server) {
+        errBox.innerText = 'server error';
+        return;
+      }
+      if (responseData.server.allow) {
+        go_green(go_el('password'));
+        const ses = responseData.server.ses || '';
+        sessionStorage.setItem('ses', ses);
+        document.location = '/cgi-bin/p?app=start&ses=' + encodeURIComponent(ses);
+        return;
+      }
+      go_red(go_el('password'));
+      errBox.innerText = 'login failed';
+    }
+
+    function cuser(el) {
+      const ok = el.value && el.value.length > 2;
+      ok ? go_green(el) : go_red(el);
+      return ok;
+    }
+
+    function cpass(el) {
+      const p = el.value || '';
+      if (p.length < 4) {
+        go_red(el);
+        return false;
+      }
+      go_clean(el);
+      return btoa(p);
+    }
+
+    function run_submit(e) {
+      e.preventDefault();
+      const u = go_el('username');
+      if (!cuser(u)) return;
+      const p = go_el('password');
+      const penc = cpass(p);
+      if (!penc) return;
+      check_user('api_login', {u: u.value, p: penc});
+    }
+  </script>
+</head>
+<body>
+  <div class="login-container">
+    <h1 class="h3 mb-2">MicroFlyton</h1>
+    <div class="subtitle">Flyton-style login core on Windows micro runtime</div>
+    <form class="needs-validation">
+      <div class="mb-3">
+        <label for="username" class="form-label">User</label>
+        <input type="text" class="form-control" id="username" value="admin" onchange="cuser(this)">
+      </div>
+      <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" class="form-control" id="password" value="fly123" onchange="cpass(this)">
+      </div>
+      <button onclick="run_submit(event)" type="submit" class="btn btn-warning w-100">Connect</button>
+      <div id="errbox" class="error-box"></div>
+    </form>
+  </div>
+</body>
+</html>

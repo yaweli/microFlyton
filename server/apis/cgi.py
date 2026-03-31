@@ -1,0 +1,99 @@
+from __future__ import annotations
+
+import importlib
+import json
+from urllib.parse import parse_qs
+
+from apis.tools.sql import get_session
+
+
+UNSESSION_METHODS = {"api_login", "ping", "api_start_prv"}
+
+
+def version() -> str:
+    return "1.11"
+
+
+def _json(data: dict) -> bytes:
+    return json.dumps(data, ensure_ascii=False).encode("utf-8")
+
+
+def _resolve_method(method: str) -> tuple[str, str] | None:
+    candidates = []
+    m = method.strip()
+    if not m:
+        return None
+    if m.startswith("api_"):
+        candidates.append((f"apis.api.{m}", m))
+        candidates.append((f"apis.api.{m[4:]}", m))
+    else:
+        candidates.append((f"apis.api.{m}", f"api_{m}"))
+        candidates.append((f"apis.api.api_{m}", f"api_{m}"))
+    for module_name, func_name in candidates:
+        try:
+            importlib.import_module(module_name)
+            return module_name, func_name
+        except ModuleNotFoundError:
+            continue
+    return None
+
+
+def _normalize_payload(body: bytes) -> dict:
+    try:
+        payload = json.loads(body.decode("utf-8")) if body else {}
+        if not isinstance(payload, dict):
+            payload = {}
+    except Exception:
+        payload = {}
+
+    if "info" not in payload or not isinstance(payload.get("info"), dict):
+        payload["info"] = {}
+    if "input" not in payload or not isinstance(payload.get("input"), dict):
+        payload["input"] = {}
+
+    # compatibility with the newer temporary login/status shape
+    if "username" in payload and "u" not in payload["input"]:
+        payload["input"]["u"] = payload.get("username")
+    if "password" in payload and "p" not in payload["input"]:
+        payload["input"]["p"] = payload.get("password")
+    if "ses" in payload and "ses" not in payload["info"]:
+        payload["info"]["ses"] = payload.get("ses")
+
+    payload["info"].setdefault("os", "web")
+    payload["info"].setdefault("ses", "")
+    payload["info"].setdefault("uses", "")
+    return payload
+
+
+def handle_api_request(query_string: str, body: bytes) -> bytes:
+    params = {k: v[0] for k, v in parse_qs(query_string, keep_blank_values=True).items()}
+    method = params.get("meth", "").strip()
+    payload = _normalize_payload(body)
+
+    base_server = {"method": method, "server_ver": version()}
+    resolved = _resolve_method(method)
+    if not resolved:
+        return _json({"server": {**base_server, "allow": 0, "err": "missing or unknown method"}})
+
+    if method not in UNSESSION_METHODS:
+        ses = str(payload.get("info", {}).get("ses") or payload.get("ses") or params.get("ses") or "")
+        row = get_session(ses) if ses else None
+        if row is None:
+            return _json({"server": {**base_server, "allow": 0, "err": "method need login", "sact": "out", "xses": ses}})
+        payload["session"] = row
+
+    module_name, func_name = resolved
+    module = importlib.import_module(module_name)
+    func = getattr(module, func_name, None)
+    if func is None:
+        return _json({"server": {**base_server, "allow": 0, "err": "method implementation not found"}})
+
+    result = func({"par": params, "post": payload})
+    if not isinstance(result, dict):
+        return _json({"server": {**base_server, "allow": 0, "err": "bad api result"}})
+
+    server = result.get("server")
+    if not isinstance(server, dict):
+        server = {}
+    result["server"] = {**base_server, **server}
+    return _json(result)
