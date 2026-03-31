@@ -7,7 +7,8 @@ cd C:\
 winget install --id Git.Git -e --source winget
 git clone https://github.com/yaweli/microFlyton.git
 cd C:\microflyton\scripts
-kic
+CMD: kic
+PowerShell: .\kic.bat
 ```
 
 Then use:
