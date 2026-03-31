@@ -5,6 +5,7 @@ Run from Command Prompt:
 ```bat
 cd C:\
 winget install --id Git.Git -e --source winget
+git clone https://github.com/yaweli/microFlyton.git
 cd C:\microflyton\scripts
 kic
 ```
