@@ -15,12 +15,12 @@ echo Version: 2026.03.30
 echo ==================================
 echo.
 echo Commands:
-echo sql      - Open SQLite terminal
-echo install  - Prepare folders and DB path
-echo run      - Run MicroFlyton
-echo register - Register MicroFlyton in Windows startup
-echo delete   - Delete and uninstall MicroFlyton code
-echo pull     - Pull latest code from GitHub safely
+echo s  - sql      - Open SQLite terminal
+echo I  - install  - Prepare folders and DB path
+echo R  - run      - Run MicroFlyton service
+echo U  - pull     - Pull latest code from GitHub safely
+echo RG - register - Register MicroFlyton in Windows startup
+echo delete - Delete and uninstall MicroFlyton code
 echo.
 echo Press Enter on empty command to exit.
 echo.
