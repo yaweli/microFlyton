@@ -3,20 +3,29 @@
 # kicdev
 # Version 2.14 - ra - sql_sort
 #
-import os, sys, json, re
+import os
+import sys
+import json
+import re
 from datetime import datetime
-sys.path.insert(0, '/usr/local/lib/python3.10/dist-packages')
-
 import importlib.util
 import sqlite3
 
 try:
-    import mysql.connector
+    import mysql.connector as mysql_connector
 except Exception:
-    mysql = None
+    mysql_connector = None
 
 sql_v = 2.14
 _env_cache = None
+
+
+def _server_root():
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+
+
+def _project_root():
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
 
 def _strip_quotes(v):
@@ -45,6 +54,8 @@ def _load_env_map():
         paths.append(cur)
 
     paths.append(os.getcwd())
+    paths.append(_project_root())
+    paths.append(_server_root())
 
     for base in paths:
         for name in (".env", ".env.micro", ".env.local"):
@@ -97,6 +108,16 @@ def _is_mic():
     return str(v).strip().lower() in ("1", "true", "yes", "on")
 
 
+def _resolve_sqlite_path(db_path):
+    db_path = _strip_quotes(db_path)
+    db_path = os.path.expandvars(os.path.expanduser(str(db_path).strip()))
+
+    if not os.path.isabs(db_path):
+        db_path = os.path.abspath(os.path.join(_project_root(), db_path))
+
+    return db_path
+
+
 def _db_connect():
     config = kic_config()
 
@@ -105,13 +126,14 @@ def _db_connect():
         if not db_path:
             raise RuntimeError("DB_PATH is missing for SQLite mode")
 
+        db_path = _resolve_sqlite_path(db_path)
         db_dir = os.path.dirname(db_path)
         if db_dir:
             os.makedirs(db_dir, exist_ok=True)
 
         return sqlite3.connect(db_path)
 
-    if mysql is None:
+    if mysql_connector is None:
         raise RuntimeError("mysql.connector is not installed but is_mic is not enabled")
 
     host = _env_get(config, "hostname")
@@ -119,12 +141,106 @@ def _db_connect():
     password = _env_get(config, "password")
     database = _env_get(config, "database")
 
-    return mysql.connector.connect(
+    return mysql_connector.connect(
         host=host,
         user=user,
         password=password,
-        database=database
+        database=database,
     )
+
+
+def _ensure_micro_log_table(connection):
+    cursor = None
+    try:
+        cursor = connection.cursor()
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS server_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                level TEXT,
+                event_type TEXT,
+                message TEXT,
+                details TEXT,
+                source TEXT,
+                created_at TEXT
+            )
+            """
+        )
+        connection.commit()
+    finally:
+        if cursor:
+            cursor.close()
+
+
+def init_db():
+    connection = None
+    try:
+        connection = _db_connect()
+        if _is_mic():
+            _ensure_micro_log_table(connection)
+        return True
+    finally:
+        if connection:
+            connection.close()
+
+
+def log_event(level, event_type, message, details=None, source="system"):
+    import logging as _logging
+
+    if details is None:
+        details = {}
+
+    try:
+        log_level = getattr(_logging, str(level).upper(), _logging.INFO)
+        _logging.log(
+            log_level,
+            json.dumps(
+                {
+                    "event_type": event_type,
+                    "message": message,
+                    "details": details,
+                    "source": source,
+                },
+                ensure_ascii=False,
+                default=str,
+            ),
+        )
+    except Exception:
+        pass
+
+    if not _is_mic():
+        return {"status": True}
+
+    connection = None
+    cursor = None
+    try:
+        connection = _db_connect()
+        _ensure_micro_log_table(connection)
+        cursor = connection.cursor()
+        cursor.execute(
+            """
+            INSERT INTO server_events
+            (level, event_type, message, details, source, created_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                str(level),
+                str(event_type),
+                str(message),
+                json.dumps(details, ensure_ascii=False, default=str),
+                str(source),
+                datetime.now().isoformat(timespec="seconds"),
+            ),
+        )
+        connection.commit()
+        return {"status": True, "id": cursor.lastrowid}
+    except Exception as err:
+        return {"status": False, "err": str(err)}
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
 
 def _table_name_only(table):
@@ -229,7 +345,7 @@ def find_in_sql(r):
         connection = _db_connect()
         cursor = connection.cursor()
         c = 0
-        table = r['table']
+        table = r["table"]
         tableas = table if " " not in table else table.split(" ")[1]
         q = f"SELECT {sql_what(r['what'])} FROM {table} {sql_join(tableas, r)}"
 
@@ -244,7 +360,7 @@ def find_in_sql(r):
             c = c + 1
 
         if "where" in r:
-            q1, c1 = sql_where(r['where'])
+            q1, c1 = sql_where(r["where"])
             if q1:
                 where_parts.append(q1)
                 c = c + c1
@@ -256,15 +372,15 @@ def find_in_sql(r):
         if c:
             q += " WHERE " + " AND ".join(where_parts)
 
-        if 'grp' in r:
+        if "grp" in r:
             q += f' GROUP BY {r["grp"]}'
-        if 'sortj' in r and r["sortj"] != "":
+        if "sortj" in r and r["sortj"] != "":
             q += f' ORDER BY {sql_sortj(r["sortj"])}'
-        elif 'sort' in r:
+        elif "sort" in r:
             q += f' ORDER BY `{r["sort"]}`'
-        if 'desc' in r:
-            q += ' DESC'
-        if 'limit' in r:
+        if "desc" in r:
+            q += " DESC"
+        if "limit" in r:
             q += f' LIMIT {r["limit"]}'
 
         if "debug" in r:
@@ -297,16 +413,16 @@ def insert_to_sql(r):
     try:
         connection = _db_connect()
         cursor = connection.cursor()
-        setdata = ''
+        setdata = ""
         set1 = sql_set(r["set"])
 
         if "data" in r:
             x = r["data"]
             y = json.dumps(x, ensure_ascii=False)
             z = y.replace("'", "''")
-            z = z.replace('ש\\"ח', 'שח')
-            z = z.replace('\\"', '')
-            z = z.replace('\\\\', '/')
+            z = z.replace('ש\\"ח', "שח")
+            z = z.replace('\\"', "")
+            z = z.replace("\\\\", "/")
             setdata = f",data='{z}'"
 
         if "id" in r:
@@ -321,7 +437,7 @@ def insert_to_sql(r):
                 return {"err": err, "status": False}
         else:
             if _is_mic():
-                query = _insert_set_to_sqlite(r['table'], f"{set1}{setdata}")
+                query = _insert_set_to_sqlite(r["table"], f"{set1}{setdata}")
             else:
                 query = f"INSERT INTO {r['table']} SET {set1}{setdata}"
 
@@ -368,7 +484,7 @@ def count_in_sql(r):
 
 
 def gen_data():
-    z = find_in_sql({'table': 'gen', 'fld': 'is_active', 'val': 1, 'what': '*', 'all': 1})
+    z = find_in_sql({"table": "gen", "fld": "is_active", "val": 1, "what": "*", "all": 1})
     gen = {}
     if not z:
         return gen
@@ -385,7 +501,7 @@ def gen_data():
 
 
 def get_data(table, id, fld="id"):
-    z = find_in_sql({'table': table, 'fld': fld, 'val': id, 'what': 'data'})
+    z = find_in_sql({"table": table, "fld": fld, "val": id, "what": "data"})
     obj = {}
     if type(z) is tuple and z[0] is not None:
         obj = json.loads(z[0])
@@ -409,7 +525,7 @@ def add_to_data(table, id, fld1, val1=""):
     sobj = json.dumps(obj, ensure_ascii=False)
     setdata = sql_var("data", sobj)
 
-    res = insert_to_sql({'table': table, 'set': setdata, 'id': id})
+    res = insert_to_sql({"table": table, "set": setdata, "id": id})
     return res
 
 
@@ -418,7 +534,7 @@ def get_next_counter(field, type1, data={}):
     x = gen[f"{type1}_{field}"]
     c = int(x["val"])
     c = c + 1
-    t = insert_to_sql({'table': 'gen', 'set': f"val1={c}", 'id': x["id"]})
+    t = insert_to_sql({"table": "gen", "set": f"val1={c}", "id": x["id"]})
 
     if not t["status"]:
         print("problem with sql write")
@@ -480,7 +596,7 @@ def kic_sql_delete(r):
 
 
 def import_state(type1):
-    q = f'select count(id),type,count from import where type={kic_geresh(type1)} AND is_active=1 group by count order by count desc limit 1'
+    q = f"select count(id),type,count from import where type={kic_geresh(type1)} AND is_active=1 group by count order by count desc limit 1"
     ans = kic_sql(q)
     if len(ans) == 0:
         return {"count": 0, "lines": 0, "updated_at": ""}
@@ -488,7 +604,7 @@ def import_state(type1):
     count = ans[0][2]
     lines = ans[0][0]
 
-    z = find_in_sql({'table': 'gen', 'fld': 'key1', 'val': type1 + '_import', 'what': 'updated_at'})
+    z = find_in_sql({"table": "gen", "fld": "key1", "val": type1 + "_import", "what": "updated_at"})
 
     if z is False:
         return {"count": 0, "lines": 0, "updated_at": ""}
@@ -503,14 +619,14 @@ def sql_next(r):
     if r["id"]:
         id = r["id"]
 
-    if not "is_active" in r:
+    if "is_active" not in r:
         r["is_active"] = 1
 
     q = f"select * from `{table}` where id>{id}"
     if r["is_active"]:
         q += f""" AND is_active={r["is_active"]} """
 
-    q += f" order by id limit 1"
+    q += " order by id limit 1"
 
     dict = kic_sql(f"desc `{table}`")
 
@@ -527,7 +643,7 @@ def sql_order(r):
     if r["id"]:
         id = r["id"]
 
-    if not "is_active" in r:
+    if "is_active" not in r:
         r["is_active"] = 1
 
     q = f"select * from `{table}` where id>{id}"
@@ -535,7 +651,7 @@ def sql_order(r):
     if "where" in r:
         q += f""" AND {r["where"]}"""
 
-    q += f' order by id'
+    q += " order by id"
 
     dict = kic_sql(f"desc `{table}`")
 
@@ -556,13 +672,15 @@ def array2obj(ary, dict):
 
 
 cache1 = {}
+
+
 def dic_of_table(tab):
     global cache1
     if "dict" in cache1:
         if tab in cache1["dict"]:
             return cache1["dict"][tab]
     dict = kic_sql(f"desc `{tab}`")
-    if not "dict" in cache1:
+    if "dict" not in cache1:
         cache1["dict"] = {}
     cache1["dict"][tab] = dict
     return dict
@@ -574,8 +692,8 @@ def is_gen_table(tab):
     if gtab in g:
         gen_id = g[gtab]["id"]
         d = get_data("gen", gen_id)
-        if 'tab_type' in d:
-            if d['tab_type'] == "gen":
+        if "tab_type" in d:
+            if d["tab_type"] == "gen":
                 return 1
     return 0
 
@@ -593,45 +711,45 @@ def kic_refine(x, v, cond):
     if v != "":
         if "min" in cond:
             if len(v) < cond["min"]:
-                return {'status': 0, 'err': f'length of {x} too small /{v}/'}
+                return {"status": 0, "err": f"length of {x} too small /{v}/"}
         if "max" in cond:
             if len(v) > cond["max"]:
-                return {'status': 0, 'err': f'length of {x} too long'}
+                return {"status": 0, "err": f"length of {x} too long"}
         if "exactly" in cond:
             if len(v) != cond["exactly"]:
-                return {'status': 0, 'err': f'length of {x} must be {cond["exactly"]} == {cond} '}
+                return {"status": 0, "err": f'length of {x} must be {cond["exactly"]} == {cond} '}
         if "list" in cond:
             if v not in cond["list"]:
-                return {'status': 0, 'err': f'{x} = ({v}) not in a list {cond["list"]}'}
+                return {"status": 0, "err": f'{x} = ({v}) not in a list {cond["list"]}'}
         if "regex" in cond:
             if not re.search(cond["regex"], v):
-                return {'status': 0, 'err': f'content of {x} must comply to regex'}
+                return {"status": 0, "err": f"content of {x} must comply to regex"}
         if "is" in cond:
             for ii in cond["is"]:
                 if ii == "email":
                     if not validate_email(v):
-                        return {'status': 0, 'err': f'content not a valid email address'}
+                        return {"status": 0, "err": "content not a valid email address"}
                 if ii == "sum":
                     if v == 0:
                         continue
                     if not v:
-                        return {'status': 0, 'err': f'content not a valid sum'}
+                        return {"status": 0, "err": "content not a valid sum"}
                 if ii == "yesno":
                     if v.strip() == "כן":
                         v = 1
                     else:
-                        return {'status': 0, 'err': f'must be yes or no /{v}/'}
+                        return {"status": 0, "err": f"must be yes or no /{v}/"}
                 if ii == "date/mdy":
                     v = validate_datemdy(v)
                 if ii == "bool01":
                     if v == "0" or v == "1" or v == 1 or v == 0:
                         v = int(v)
                     else:
-                        return {'status': 0, 'err': f'must be 0 or 1 /{v}/'}
+                        return {"status": 0, "err": f"must be 0 or 1 /{v}/"}
                 if ii == "phone":
                     v1 = v.replace("-", "")
                     if not re.fullmatch(r"\d{10}", v1):
-                        return {'status': 0, 'err': f'phone fromat wrong /{v}/', 'errcode': 101}
+                        return {"status": 0, "err": f"phone fromat wrong /{v}/", "errcode": 101}
     return v
 
 
@@ -645,7 +763,7 @@ def validate_datemdy(v):
     day = int(d[1])
     mon = int(d[0])
     yir = int(d[2])
-    y0 = int(datetime.today().strftime('%Y'))
+    y0 = int(datetime.today().strftime("%Y"))
     e = 0
     if day > 31 or day < 1:
         e = 1
@@ -654,7 +772,7 @@ def validate_datemdy(v):
     if yir > (y0 + 10) or yir < (y0 - 180):
         e = 3
     if e:
-        return {'status': 0, 'err': f'date wrong format ({e} / {y0})'}
+        return {"status": 0, "err": f"date wrong format ({e} / {y0})"}
     if day < 10:
         day = f"0{day}"
     if mon < 10:
@@ -664,8 +782,10 @@ def validate_datemdy(v):
 
 
 def kic_config():
-    file_path = "../config.py"
+    file_path = os.path.join(_server_root(), "config.py")
     spec = importlib.util.spec_from_file_location("config", file_path)
+    if spec is None or spec.loader is None:
+        raise FileNotFoundError(f"Could not load config.py from {file_path}")
     config = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(config)
     return config
@@ -682,7 +802,7 @@ def kic_geresh(v):
 
 def get_record(table, id, fld="id"):
     dict = kic_sql(f"desc `{table}`")
-    z = find_in_sql({'table': table, 'fld': fld, 'val': id, 'what': '*'})
+    z = find_in_sql({"table": table, "fld": fld, "val": id, "what": "*"})
     if type(z) is bool:
         return {}
     obj = array2obj(z, dict)
@@ -782,7 +902,7 @@ def sql_what(s):
         if ":" in one:
             two = one.split(":")
             one = _json_field_expr(two[0], two[1])
-        news += (p + one)
+        news += p + one
         p = ","
     return news
 
@@ -808,11 +928,11 @@ def sql_sortj(s):
 
     if "int" in opts:
         if _is_mic():
-            out = f'CAST({out} as INTEGER)'
+            out = f"CAST({out} as INTEGER)"
         else:
-            out = f'CAST({out} as SIGNED INTEGER)'
+            out = f"CAST({out} as SIGNED INTEGER)"
 
     if "desc" in opts:
-        out = f'{out} DESC'
+        out = f"{out} DESC"
 
     return out
