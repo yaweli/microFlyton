@@ -3,6 +3,8 @@
 
 microFlyton is a lightweight, self-contained edition of the [Flyton](https://github.com/yaweli/flyton) project — built to run a full Flyton service on a single Windows machine with minimal setup. It includes the core runtime, a local SQLite database, and a simple KIC console for managing the service. If you want the full-featured, production-grade version, see the main Flyton project.
 
+**Full Flyton project:** https://github.com/yaweli/flyton
+
 ---
 
 ## First time Install
