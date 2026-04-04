@@ -4,7 +4,6 @@ import logging
 import threading
 import webbrowser
 
-from apis.tools.sql import init_db, log_event
 from config import APP_NAME, AUTO_OPEN_BROWSER, ENV_SOURCE, HOST, LOGS_ROOT, MACHINE_ID, PORT, START_URL
 from runtime.windows_http import create_server
 
@@ -24,14 +23,6 @@ def open_browser_once() -> None:
 
 
 def main() -> None:
-    init_db()
-    log_event(
-        "INFO",
-        "server_start",
-        f"{APP_NAME} starting",
-        {"host": HOST, "port": PORT, "env_source": ENV_SOURCE},
-        source="server",
-    )
     httpd = create_server()
     if AUTO_OPEN_BROWSER:
         threading.Timer(1.0, open_browser_once).start()
@@ -42,7 +33,6 @@ def main() -> None:
         httpd.serve_forever()
     except KeyboardInterrupt:
         print(f"{APP_NAME} stopped.")
-        log_event("INFO", "server_stop", f"{APP_NAME} stopped by user", source="server")
     finally:
         httpd.server_close()
 
