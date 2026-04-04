@@ -101,7 +101,7 @@ if exist "%MYSQL_DIR%\data" rmdir /s /q "%MYSQL_DIR%\data"
 
 echo   Initializing data directory...
 call :log "  running mysqld --initialize-insecure"
-"%MYSQL_BIN%\mysqld.exe" --initialize-insecure --console --defaults-file="%MYSQL_DIR%\my.ini" 2>&1
+"%MYSQL_BIN%\mysqld.exe" --defaults-file="%MYSQL_DIR%\my.ini" --initialize-insecure --console 2>&1
 if errorlevel 1 (
   call :log "FAIL: initialize-insecure failed"
   echo ERROR: MySQL initialization failed.
@@ -117,7 +117,7 @@ if not errorlevel 1 (
   net stop MySQL_Lite >nul 2>nul
   "%MYSQL_BIN%\mysqld.exe" --remove MySQL_Lite >nul 2>nul
 )
-"%MYSQL_BIN%\mysqld.exe" --install MySQL_Lite --defaults-file="%MYSQL_DIR%\my.ini" 2>&1
+"%MYSQL_BIN%\mysqld.exe" --defaults-file="%MYSQL_DIR%\my.ini" --install MySQL_Lite 2>&1
 if errorlevel 1 (
   call :log "FAIL: service install failed"
   echo ERROR: MySQL service registration failed.
@@ -138,7 +138,7 @@ if not errorlevel 1 (
 
 call :log "  service not registered - registering"
 echo   Service not registered. Registering...
-"%MYSQL_BIN%\mysqld.exe" --install MySQL_Lite --defaults-file="%MYSQL_DIR%\my.ini" 2>&1
+"%MYSQL_BIN%\mysqld.exe" --defaults-file="%MYSQL_DIR%\my.ini" --install MySQL_Lite 2>&1
 if errorlevel 1 (
   call :log "FAIL: service install failed"
   echo ERROR: MySQL service registration failed.
