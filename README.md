@@ -59,25 +59,18 @@ Then use:
 - `run`
 
 ## KIC commands
-- `sql`
-- `install`
-- `run`
-- `register`
-- `delete`
-- `pull`
-
-## Notes
+- `sql` - enter into our sql as cli 
+- `run` - run the service on a cmd terminal 
+- `register` - next reboot the service will run auto
 - `install` moves runtime data to `C:\sqlite_microflyton`.
 - `delete` removes the code folder and startup registration.
-- `delete` preserves the external database.
-- `delete` closes the KIC console so Windows can release the folder before removal.
+-          preserves the external database.
+-          closes the KIC console so Windows can release the folder before removal.
 - `pull` uses `git pull --ff-only` and then re-runs install.
 - runtime data stays outside the repo to protect it during updates.
 
 ## Access
 - `http://127.0.0.1:8080/pages/index.html`
-- `http://127.0.0.1:8080/Client/pages/index.html`
-- `http://127.0.0.1:8080/cgi-bin/p?app=start&ses=...`
 
 ## Login
 - username: `admin`

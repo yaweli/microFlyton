@@ -11,7 +11,7 @@ echo ==================================
 echo KIC Console
 echo Project: %APP_DIR%
 echo Database: %DB_PATH%
-echo Version: 2026.03.31
+echo Version: 2026.04.04
 echo ==================================
 echo.
 echo Commands:
