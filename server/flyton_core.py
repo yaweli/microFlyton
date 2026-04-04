@@ -9,7 +9,13 @@ import sys
 from pathlib import Path
 from urllib.parse import parse_qs
 
-from config import CLIENT_APP_ROOT, CLIENT_ROOT, LEGACY_SERVER_APP_ROOT
+from pathlib import Path as _Path
+
+_SERVER_ROOT         = _Path(__file__).resolve().parent
+_PROJECT_ROOT        = _SERVER_ROOT.parent
+CLIENT_ROOT          = _PROJECT_ROOT / "client"
+CLIENT_APP_ROOT      = CLIENT_ROOT / "app"
+LEGACY_SERVER_APP_ROOT = _SERVER_ROOT / "app"
 
 
 def safe_app_name(name: str) -> str:
