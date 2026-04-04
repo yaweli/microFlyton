@@ -72,6 +72,15 @@ if exist "%ENV_FILE%" (
 exit /b 0
 
 :install_app
+net session >nul 2>nul
+if errorlevel 1 (
+  echo.
+  echo ERROR: Install requires Administrator privileges.
+  echo Please run kic.bat as Administrator.
+  echo.
+  pause
+  goto menu
+)
 call "%SCRIPT_DIR%install_microflyton.bat"
 pause
 goto menu

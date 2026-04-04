@@ -73,6 +73,25 @@ echo Installing Windows service...
 "%MYSQL_BIN%\mysqld.exe" --install MySQL_Lite --defaults-file="%MYSQL_DIR%\my.ini"
 
 :mysql_start
+echo Checking MySQL service registration...
+sc query MySQL_Lite >nul 2>nul
+if errorlevel 1 (
+  echo Service not registered. Registering now...
+  if not exist "%MYSQL_DIR%\data\ibdata1" (
+    echo Initializing data directory...
+    "%MYSQL_BIN%\mysqld.exe" --initialize-insecure --console --defaults-file="%MYSQL_DIR%\my.ini"
+    if errorlevel 1 (
+      echo ERROR: MySQL initialization failed.
+      exit /b 1
+    )
+  )
+  "%MYSQL_BIN%\mysqld.exe" --install MySQL_Lite --defaults-file="%MYSQL_DIR%\my.ini"
+  if errorlevel 1 (
+    echo ERROR: MySQL service registration failed.
+    exit /b 1
+  )
+)
+
 echo Starting MySQL service...
 net start MySQL_Lite 2>nul
 
@@ -89,7 +108,11 @@ for /l %%i in (1,1,15) do (
   )
 )
 if "!READY!"=="0" (
+  echo.
   echo ERROR: MySQL did not respond after 30 seconds.
+  echo   Service state:
+  sc query MySQL_Lite | findstr "STATE"
+  echo   Error log: %MYSQL_DIR%\data\*.err
   exit /b 1
 )
 
