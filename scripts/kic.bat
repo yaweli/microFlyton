@@ -180,19 +180,6 @@ goto menu
 :run_sql
 call :load_env
 
-set "SQLITE_EXE="
-where sqlite3 >nul 2>nul
-if not errorlevel 1 set "SQLITE_EXE=sqlite3"
-
-if not defined SQLITE_EXE (
-  echo.
-  echo ERROR: sqlite3 was not found in PATH.
-  echo Install SQLite CLI or open the DB with another SQLite tool.
-  echo.
-  pause
-  goto menu
-)
-
 rem Extra hard fallback for SQL command specifically
 if not exist "%DB_PATH%" (
   if exist "C:\sqlite_microflyton\microflyton.db" (
@@ -213,11 +200,19 @@ echo.
 echo Opening SQLite:
 echo %DB_PATH%
 echo.
-echo Type .tables to list tables
-echo Type .schema to view schema
-echo Type .exit to return to KIC Console
-echo.
-"%SQLITE_EXE%" "%DB_PATH%"
+
+set "SQLITE_EXE="
+where sqlite3 >nul 2>nul
+if not errorlevel 1 set "SQLITE_EXE=sqlite3"
+
+if defined SQLITE_EXE (
+  echo Type .tables  .schema  .exit to navigate
+  echo.
+  "%SQLITE_EXE%" "%DB_PATH%"
+) else (
+  python "%SCRIPT_DIR%sqlite_shell.py" "%DB_PATH%"
+)
+
 echo.
 echo SQLite session closed.
 pause
