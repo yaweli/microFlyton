@@ -67,10 +67,6 @@ echo Installing Windows service...
 :mysql_start
 echo Starting MySQL service...
 net start MySQL_Lite 2>nul
-if errorlevel 2 (
-  echo ERROR: Could not start MySQL_Lite service.
-  exit /b 1
-)
 
 echo Waiting for MySQL to be ready...
 set "READY=0"
