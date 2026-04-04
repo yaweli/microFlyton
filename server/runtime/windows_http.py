@@ -2,14 +2,20 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 from urllib.parse import urlparse
 
-from apis.tools.sql import log_event
-from config import APP_NAME, CLIENT_ROOT, ENV_SOURCE, HOST, MACHINE_ID, PORT, SERVER_ROOT
 from flyton_core import guess_type
 from runtime.cgi_bridge import render_api_request, render_p4web_request, render_page_request
 from runtime.pathmap import CGI_API_PATHS, CGI_P4WEB_PATHS, CGI_PAGE_PATHS, resolve_static_path
+
+SERVER_ROOT = Path(__file__).resolve().parent.parent
+CLIENT_ROOT = SERVER_ROOT.parent / "client"
+APP_NAME    = os.getenv("APP_NAME", "MicroFlyton")
+HOST        = os.getenv("HOST", "127.0.0.1")
+PORT        = int(os.getenv("PORT", "8080"))
 
 
 class MicroFlytonHandler(BaseHTTPRequestHandler):
@@ -34,16 +40,7 @@ class MicroFlytonHandler(BaseHTTPRequestHandler):
             ).encode("utf-8")
             return self._send_bytes(200, html, "text/html; charset=utf-8")
         if parsed.path == "/health":
-            body = json.dumps(
-                {
-                    "ok": True,
-                    "app": APP_NAME,
-                    "env_source": ENV_SOURCE,
-                    "machine_id": MACHINE_ID,
-                    "server_root": str(SERVER_ROOT),
-                    "client_root": str(CLIENT_ROOT),
-                }
-            ).encode("utf-8")
+            body = json.dumps({"ok": True, "app": APP_NAME}).encode("utf-8")
             return self._send_bytes(200, body, "application/json; charset=utf-8")
         if parsed.path in CGI_PAGE_PATHS:
             try:
@@ -51,31 +48,20 @@ class MicroFlytonHandler(BaseHTTPRequestHandler):
                 return self._send_bytes(200, data, "text/html; charset=utf-8")
             except Exception as exc:
                 logging.exception("CGI render failed")
-                log_event("ERROR", "cgi_render", str(exc), {"path": self.path}, source="server")
-                return self._send_bytes(
-                    500,
-                    f"<h1>Server error</h1><pre>{exc}</pre>".encode("utf-8"),
-                    "text/html; charset=utf-8",
-                )
+                return self._send_bytes(500, f"<h1>Server error</h1><pre>{exc}</pre>".encode("utf-8"), "text/html; charset=utf-8")
         if parsed.path in CGI_P4WEB_PATHS:
             try:
                 data = render_p4web_request(parsed.query)
                 return self._send_bytes(200, data, "text/html; charset=utf-8")
             except Exception as exc:
                 logging.exception("P4WEB render failed")
-                log_event("ERROR", "p4web_render", str(exc), {"path": self.path}, source="server")
-                return self._send_bytes(
-                    500,
-                    f"<h1>Server error</h1><pre>{exc}</pre>".encode("utf-8"),
-                    "text/html; charset=utf-8",
-                )
+                return self._send_bytes(500, f"<h1>Server error</h1><pre>{exc}</pre>".encode("utf-8"), "text/html; charset=utf-8")
         if parsed.path in CGI_API_PATHS:
             try:
                 data = render_api_request(parsed.query, b"")
                 return self._send_bytes(200, data, "application/json; charset=utf-8")
             except Exception as exc:
                 logging.exception("API GET failed")
-                log_event("ERROR", "api_get_error", str(exc), {"path": self.path}, source="api")
                 return self._send_bytes(500, b'{"server":{"allow":0,"err":"server error"}}', "application/json; charset=utf-8")
         folder, rel = resolve_static_path(parsed.path)
         if folder is not None:
@@ -100,7 +86,6 @@ class MicroFlytonHandler(BaseHTTPRequestHandler):
             return self._send_bytes(200, data, "application/json; charset=utf-8")
         except Exception as exc:
             logging.exception("API failed")
-            log_event("ERROR", "api_error", str(exc), {"path": self.path}, source="api")
             return self._send_bytes(500, b'{"server":{"allow":0,"err":"server error"}}', "application/json; charset=utf-8")
 
 
