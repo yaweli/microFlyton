@@ -11,12 +11,35 @@ cd C:\microflyton\scripts
 ```
 
 
-in case you have git , this message will apear: (ignore and continue):
+In case you already have git , this message will apear: (ignore and continue):
 ```bat
 Found an existing package already installed. Trying to upgrade the installed package...
 No available upgrade found.
 No newer package versions are available from the configured sources.
 ```
+
+The "kic" script will show a menu : 
+```bat
+==================================
+KIC Console
+Project: C:\microFlyton
+Database: C:\sqlite_microflyton\microflyton.db
+Version: 2026.03.30
+==================================
+
+Commands:
+s  - sql      - Open SQLite terminal
+I  - install  - Prepare folders and DB path
+R  - run      - Run MicroFlyton service
+U  - pull     - Pull latest code from GitHub safely
+RG - register - Register MicroFlyton in Windows startup
+delete - Delete and uninstall MicroFlyton code
+
+Press Enter on empty command to exit.
+
+Enter command:
+```
+
 
 
 Then use:
