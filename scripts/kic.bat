@@ -6,7 +6,6 @@ for %%I in ("%SCRIPT_DIR%..") do set "APP_DIR=%%~fI"
 
 :menu
 call :load_env
-cls
 echo ==================================
 echo KIC Console
 echo Project: %APP_DIR%
