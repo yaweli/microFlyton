@@ -63,9 +63,7 @@ Then use:
 - `run` - run the service on a cmd terminal 
 - `register` - next reboot the service will run auto
 - `install` moves runtime data to `C:\sqlite_microflyton`.
-- `delete` removes the code folder and startup registration.
--          preserves the external database.
--          closes the KIC console so Windows can release the folder before removal.
+- `delete` removes the code folder and startup registration.  preserves the external database. closes the KIC console so Windows can release the folder before removal.
 - `pull` uses `git pull --ff-only` and then re-runs install.
 - runtime data stays outside the repo to protect it during updates.
 
