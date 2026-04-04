@@ -42,6 +42,12 @@ Enter command:
 
 
 
+if this is not the first time , you will need to update , (or delete + install) , what for this error after thr git clone : 
+```bat
+fatal: destination path 'microFlyton' already exists and is not an empty directory.
+```
+
+
 Then use:
 - `install`
 - `run`
