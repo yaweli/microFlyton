@@ -189,7 +189,7 @@ echo.
 echo Opening MySQL: %DB_HOST%/%DB_NAME%  user:%DB_USER%
 echo Type \q to exit.
 echo.
-"%MYSQL_EXE%" -h%DB_HOST% -u%DB_USER% -p%DB_PASS% %DB_NAME%
+"%MYSQL_EXE%" --protocol=TCP -h%DB_HOST% -u%DB_USER% -p%DB_PASS% %DB_NAME%
 
 echo.
 echo MySQL session closed.

@@ -66,11 +66,31 @@ echo Installing Windows service...
 
 :mysql_start
 echo Starting MySQL service...
-net start MySQL_Lite >nul 2>nul
-timeout /t 3 /nobreak >nul
+net start MySQL_Lite 2>nul
+if errorlevel 2 (
+  echo ERROR: Could not start MySQL_Lite service.
+  exit /b 1
+)
+
+echo Waiting for MySQL to be ready...
+set "READY=0"
+for /l %%i in (1,1,15) do (
+  if "!READY!"=="0" (
+    "%MYSQL_BIN%\mysql.exe" -u root --protocol=TCP --host=127.0.0.1 --connect-timeout=2 --execute="SELECT 1;" >nul 2>nul
+    if not errorlevel 1 set "READY=1"
+    if "!READY!"=="0" (
+      echo   attempt %%i/15...
+      timeout /t 2 /nobreak >nul
+    )
+  )
+)
+if "!READY!"=="0" (
+  echo ERROR: MySQL did not respond after 30 seconds.
+  exit /b 1
+)
 
 echo [4/5] Initializing database and tables...
-"%MYSQL_BIN%\mysql.exe" -u root < "%SCRIPT_DIR%init_tables.sql"
+"%MYSQL_BIN%\mysql.exe" -u root --protocol=TCP --host=127.0.0.1 < "%SCRIPT_DIR%init_tables.sql"
 if errorlevel 1 (
   echo ERROR: Database initialization failed.
   exit /b 1
