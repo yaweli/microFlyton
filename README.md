@@ -10,6 +10,18 @@ cd C:\microflyton\scripts
 .\kic.bat
 ```
 
+
+in case you have git , this message will apear: (ignore and continue):
+
+
+Found an existing package already installed. Trying to upgrade the installed package...
+
+No available upgrade found.
+
+No newer package versions are available from the configured sources.
+
+
+
 Then use:
 - `install`
 - `run`
