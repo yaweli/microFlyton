@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import traceback
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
@@ -16,6 +17,12 @@ CLIENT_ROOT = SERVER_ROOT.parent / "client"
 APP_NAME    = os.getenv("APP_NAME", "MicroFlyton")
 HOST        = os.getenv("HOST", "127.0.0.1")
 PORT        = int(os.getenv("PORT", "8080"))
+
+
+def _err(label, exc):
+    tb = traceback.format_exc()
+    print(f"\n[ERROR] {label}: {exc}\n{tb}", flush=True)
+    return tb
 
 
 class MicroFlytonHandler(BaseHTTPRequestHandler):
@@ -47,21 +54,21 @@ class MicroFlytonHandler(BaseHTTPRequestHandler):
                 data = render_page_request(parsed.query)
                 return self._send_bytes(200, data, "text/html; charset=utf-8")
             except Exception as exc:
-                logging.exception("CGI render failed")
-                return self._send_bytes(500, f"<h1>Server error</h1><pre>{exc}</pre>".encode("utf-8"), "text/html; charset=utf-8")
+                tb = _err("CGI render failed", exc)
+                return self._send_bytes(500, f"<h1>Server error</h1><pre>{tb}</pre>".encode("utf-8"), "text/html; charset=utf-8")
         if parsed.path in CGI_P4WEB_PATHS:
             try:
                 data = render_p4web_request(parsed.query)
                 return self._send_bytes(200, data, "text/html; charset=utf-8")
             except Exception as exc:
-                logging.exception("P4WEB render failed")
-                return self._send_bytes(500, f"<h1>Server error</h1><pre>{exc}</pre>".encode("utf-8"), "text/html; charset=utf-8")
+                tb = _err("P4WEB render failed", exc)
+                return self._send_bytes(500, f"<h1>Server error</h1><pre>{tb}</pre>".encode("utf-8"), "text/html; charset=utf-8")
         if parsed.path in CGI_API_PATHS:
             try:
                 data = render_api_request(parsed.query, b"")
                 return self._send_bytes(200, data, "application/json; charset=utf-8")
             except Exception as exc:
-                logging.exception("API GET failed")
+                _err("API GET failed", exc)
                 return self._send_bytes(500, b'{"server":{"allow":0,"err":"server error"}}', "application/json; charset=utf-8")
         folder, rel = resolve_static_path(parsed.path)
         if folder is not None:
@@ -85,7 +92,7 @@ class MicroFlytonHandler(BaseHTTPRequestHandler):
             data = render_api_request(parsed.query, body)
             return self._send_bytes(200, data, "application/json; charset=utf-8")
         except Exception as exc:
-            logging.exception("API failed")
+            _err("API POST failed", exc)
             return self._send_bytes(500, b'{"server":{"allow":0,"err":"server error"}}', "application/json; charset=utf-8")
 
 
