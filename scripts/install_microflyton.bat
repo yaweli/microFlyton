@@ -194,7 +194,17 @@ if "!READY!"=="0" (
 )
 
 rem ----------------------------------------------------------------
-echo [4/5] Initializing database and tables...
+echo [4/5] Installing mysql-connector-python...
+call :log "[4/5] pip install mysql-connector-python"
+python -m pip install mysql-connector-python 2>&1
+if errorlevel 1 (
+  call :log "FAIL: pip install mysql-connector-python failed"
+  echo ERROR: Could not install mysql-connector-python.
+  exit /b 1
+)
+call :log "  mysql-connector-python OK"
+
+echo [5/6] Initializing database and tables...
 call :log "[4/5] init_tables.sql"
 "%MYSQL_BIN%\mysql.exe" -u root --protocol=TCP --host=127.0.0.1 < "%SCRIPT_DIR%init_tables.sql" 2>&1
 if errorlevel 1 (
@@ -205,7 +215,7 @@ if errorlevel 1 (
 call :log "  tables OK"
 
 rem ----------------------------------------------------------------
-echo [5/5] Updating .env.micro for MySQL...
+echo [6/6] Updating .env.micro for MySQL...
 call :log "[5/5] updating .env.micro"
 python -c "
 import sys
