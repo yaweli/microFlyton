@@ -59,8 +59,8 @@ if exist "%TARGET_DB%" (
   )
 )
 
-echo [6/6] Initializing SQLite database...
-python -c "import sys, os; sys.path.insert(0, r'%APP_DIR%\server'); os.environ['DB_PATH'] = r'%TARGET_DB%'; os.environ['is_mic'] = '1'; from apis.tools.sql import init_db; init_db(); print('SQLite database ready: %TARGET_DB%')"
+echo [6/6] Initializing SQLite database and tables...
+python "%SCRIPT_DIR%init_tables.py" "%TARGET_DB%"
 if errorlevel 1 (
   echo WARNING: Database initialization failed. Check Python path and .env.micro.
   exit /b 1
