@@ -10,7 +10,7 @@ set "LOG_DIR=%APP_DIR%\server\logs"
 set "DATA_DIR=%APP_DIR%\server\data"
 set "TMP_ENV=%TEMP%\microflyton_env_%RANDOM%_%RANDOM%.tmp"
 
-echo [1/5] Checking Python...
+echo [1/6] Checking Python...
 where python >nul 2>nul
 if errorlevel 1 (
   echo ERROR: python was not found in PATH.
@@ -18,18 +18,18 @@ if errorlevel 1 (
   exit /b 1
 )
 
-echo [2/5] Validating environment file...
+echo [2/6] Validating environment file...
 if not exist "%ENV_FILE%" (
   echo ERROR: %ENV_FILE% was not found.
   exit /b 1
 )
 
-echo [3/5] Creating folders...
+echo [3/6] Creating folders...
 if not exist "%TARGET_DB_DIR%" mkdir "%TARGET_DB_DIR%"
 if not exist "%LOG_DIR%" mkdir "%LOG_DIR%"
 if not exist "%DATA_DIR%" mkdir "%DATA_DIR%"
 
-echo [4/5] Updating DB path in .env.micro...
+echo [4/6] Updating DB path in .env.micro...
 set "FOUND_DB_PATH=0"
 (
   for /f "usebackq delims=" %%L in ("%ENV_FILE%") do (
@@ -45,7 +45,7 @@ set "FOUND_DB_PATH=0"
 ) > "%TMP_ENV%"
 move /y "%TMP_ENV%" "%ENV_FILE%" >nul
 
-echo [5/5] Checking database migration...
+echo [5/6] Checking database migration...
 if exist "%TARGET_DB%" (
   echo External database already exists:
   echo %TARGET_DB%
@@ -55,9 +55,15 @@ if exist "%TARGET_DB%" (
     echo Migrated database to:
     echo %TARGET_DB%
   ) else (
-    echo No existing database was found.
-    echo A new database will be initialized on first server start.
+    echo No existing database found. Initializing new SQLite database...
   )
+)
+
+echo [6/6] Initializing SQLite database...
+python -c "import sys, os; sys.path.insert(0, r'%APP_DIR%\server'); os.environ['DB_PATH'] = r'%TARGET_DB%'; os.environ['is_mic'] = '1'; from apis.tools.sql import init_db; init_db(); print('SQLite database ready: %TARGET_DB%')"
+if errorlevel 1 (
+  echo WARNING: Database initialization failed. Check Python path and .env.micro.
+  exit /b 1
 )
 
 where git >nul 2>nul
