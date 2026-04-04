@@ -95,6 +95,37 @@ echo   Creating my.ini...
 ) > "%MYSQL_DIR%\my.ini"
 call :log "  my.ini written"
 
+echo   Clearing old data directory for fresh initialize...
+call :log "  removing old data dir"
+if exist "%MYSQL_DIR%\data" rmdir /s /q "%MYSQL_DIR%\data"
+
+echo   Initializing data directory...
+call :log "  running mysqld --initialize-insecure"
+"%MYSQL_BIN%\mysqld.exe" --initialize-insecure --console --defaults-file="%MYSQL_DIR%\my.ini" 2>&1
+if errorlevel 1 (
+  call :log "FAIL: initialize-insecure failed"
+  echo ERROR: MySQL initialization failed.
+  exit /b 1
+)
+call :log "  initialize OK"
+
+echo   Registering Windows service...
+call :log "  mysqld --install MySQL_Lite"
+sc query MySQL_Lite >nul 2>nul
+if not errorlevel 1 (
+  call :log "  removing old service registration"
+  net stop MySQL_Lite >nul 2>nul
+  "%MYSQL_BIN%\mysqld.exe" --remove MySQL_Lite >nul 2>nul
+)
+"%MYSQL_BIN%\mysqld.exe" --install MySQL_Lite --defaults-file="%MYSQL_DIR%\my.ini" 2>&1
+if errorlevel 1 (
+  call :log "FAIL: service install failed"
+  echo ERROR: MySQL service registration failed.
+  exit /b 1
+)
+call :log "  service registered OK"
+goto mysql_start
+
 :mysql_service
 echo   Checking service registration...
 call :log "  sc query MySQL_Lite"
@@ -105,26 +136,8 @@ if not errorlevel 1 (
   goto mysql_start
 )
 
-call :log "  service not registered"
-echo   Service not registered.
-
-if not exist "%MYSQL_DIR%\data\ibdata1" (
-  echo   Initializing data directory...
-  call :log "  running mysqld --initialize-insecure"
-  "%MYSQL_BIN%\mysqld.exe" --initialize-insecure --console --defaults-file="%MYSQL_DIR%\my.ini" 2>&1
-  if errorlevel 1 (
-    call :log "FAIL: initialize-insecure failed"
-    echo ERROR: MySQL initialization failed.
-    exit /b 1
-  )
-  call :log "  initialize OK"
-) else (
-  call :log "  data dir exists - skip initialize"
-  echo   Data directory exists - skipping initialize.
-)
-
-echo   Registering Windows service...
-call :log "  mysqld --install MySQL_Lite"
+call :log "  service not registered - registering"
+echo   Service not registered. Registering...
 "%MYSQL_BIN%\mysqld.exe" --install MySQL_Lite --defaults-file="%MYSQL_DIR%\my.ini" 2>&1
 if errorlevel 1 (
   call :log "FAIL: service install failed"
