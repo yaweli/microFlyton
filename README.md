@@ -18,6 +18,18 @@ No available upgrade found.
 No newer package versions are available from the configured sources.
 ```
 
+
+
+
+if this is not the first time , you will need to update , (or delete + install) , what for this error after thr git clone : 
+```bat
+fatal: destination path 'microFlyton' already exists and is not an empty directory.
+```
+
+
+## If all go well 
+
+
 The "kic" script will show a menu : 
 ```bat
 ==================================
@@ -40,12 +52,6 @@ Press Enter on empty command to exit.
 Enter command:
 ```
 
-
-
-if this is not the first time , you will need to update , (or delete + install) , what for this error after thr git clone : 
-```bat
-fatal: destination path 'microFlyton' already exists and is not an empty directory.
-```
 
 
 Then use:
