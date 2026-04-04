@@ -1,5 +1,13 @@
 @echo off
 setlocal EnableExtensions EnableDelayedExpansion
+
+net session >nul 2>nul
+if errorlevel 1 (
+  echo ERROR: This script must be run as Administrator.
+  echo Right-click the script and select "Run as administrator".
+  pause
+  exit /b 1
+)
 set "SCRIPT_DIR=%~dp0"
 for %%I in ("%SCRIPT_DIR%..") do set "APP_DIR=%%~fI"
 set "ENV_FILE=%APP_DIR%\.env.micro"
