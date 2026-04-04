@@ -110,18 +110,24 @@ if errorlevel 1 (
 call :log "  initialize OK"
 
 echo   Registering Windows service...
+call :log "  cleaning up any old service registration"
+net stop MySQL_Lite >nul 2>nul
+"%MYSQL_BIN%\mysqld.exe" --remove MySQL_Lite >nul 2>nul
+sc delete MySQL_Lite >nul 2>nul
+timeout /t 2 /nobreak >nul
+
 call :log "  mysqld --install MySQL_Lite"
-sc query MySQL_Lite >nul 2>nul
-if not errorlevel 1 (
-  call :log "  removing old service registration"
-  net stop MySQL_Lite >nul 2>nul
-  "%MYSQL_BIN%\mysqld.exe" --remove MySQL_Lite >nul 2>nul
-)
 "%MYSQL_BIN%\mysqld.exe" --defaults-file="%MYSQL_DIR%\my.ini" --install MySQL_Lite 2>&1
 if errorlevel 1 (
   call :log "FAIL: service install failed"
   echo ERROR: MySQL service registration failed.
-  exit /b 1
+  echo   Trying sc create as fallback...
+  sc create MySQL_Lite binPath= "\"%MYSQL_BIN%\mysqld.exe\" --defaults-file=\"%MYSQL_DIR%\my.ini\" MySQL_Lite" start= auto DisplayName= "MySQL Lite" 2>&1
+  if errorlevel 1 (
+    call :log "FAIL: sc create also failed"
+    echo ERROR: Could not register MySQL service.
+    exit /b 1
+  )
 )
 call :log "  service registered OK"
 goto mysql_start
