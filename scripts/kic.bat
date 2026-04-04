@@ -10,7 +10,7 @@ cls
 echo ==================================
 echo KIC Console
 echo Project: %APP_DIR%
-echo Database: %DB_PATH%
+echo Database: %DB_HOST%/%DB_NAME%  user:%DB_USER%
 echo Version: 2026.04.04
 echo ==================================
 echo.
@@ -53,29 +53,19 @@ goto menu
 
 :load_env
 set "ENV_FILE=%APP_DIR%\.env.micro"
-set "DB_PATH_RAW=C:\sqlite_microflyton\microflyton.db"
+set "DB_HOST=127.0.0.1"
+set "DB_USER=fly"
+set "DB_PASS=1964"
+set "DB_NAME=fly"
 set "PORT=8080"
 
 if exist "%ENV_FILE%" (
   for /f "usebackq tokens=1,* delims==" %%A in ("%ENV_FILE%") do (
-    if /i "%%~A"=="DB_PATH" set "DB_PATH_RAW=%%~B"
-    if /i "%%~A"=="PORT" set "PORT=%%~B"
-  )
-)
-
-set "FIRST_CHAR=%DB_PATH_RAW:~0,1%"
-if "%FIRST_CHAR%"=="." (
-  set "DB_PATH=%APP_DIR%\%DB_PATH_RAW%"
-) else (
-  set "DB_PATH=%DB_PATH_RAW%"
-)
-
-for %%I in ("%DB_PATH%") do set "DB_PATH=%%~fI"
-
-rem Fallback fix: if .env.micro still points to old local DB path, prefer the new external DB
-if not exist "%DB_PATH%" (
-  if exist "C:\sqlite_microflyton\microflyton.db" (
-    set "DB_PATH=C:\sqlite_microflyton\microflyton.db"
+    if /i "%%~A"=="hostname" set "DB_HOST=%%~B"
+    if /i "%%~A"=="username" set "DB_USER=%%~B"
+    if /i "%%~A"=="password" set "DB_PASS=%%~B"
+    if /i "%%~A"=="database" set "DB_NAME=%%~B"
+    if /i "%%~A"=="PORT"     set "PORT=%%~B"
   )
 )
 
@@ -180,40 +170,28 @@ goto menu
 :run_sql
 call :load_env
 
-rem Extra hard fallback for SQL command specifically
-if not exist "%DB_PATH%" (
-  if exist "C:\sqlite_microflyton\microflyton.db" (
-    set "DB_PATH=C:\sqlite_microflyton\microflyton.db"
+set "MYSQL_EXE=C:\mysql_lite\bin\mysql.exe"
+if not exist "%MYSQL_EXE%" (
+  where mysql >nul 2>nul
+  if not errorlevel 1 (
+    set "MYSQL_EXE=mysql"
+  ) else (
+    echo.
+    echo ERROR: mysql.exe not found.
+    echo Run install first to set up MySQL.
+    echo.
+    pause
+    goto menu
   )
 )
 
-if not exist "%DB_PATH%" (
-  echo.
-  echo WARNING: Database file does not exist yet:
-  echo %DB_PATH%
-  echo.
-  choice /c YN /m "Continue anyway"
-  if errorlevel 2 goto menu
-)
+echo.
+echo Opening MySQL: %DB_HOST%/%DB_NAME%  user:%DB_USER%
+echo Type \q to exit.
+echo.
+"%MYSQL_EXE%" -h%DB_HOST% -u%DB_USER% -p%DB_PASS% %DB_NAME%
 
 echo.
-echo Opening SQLite:
-echo %DB_PATH%
-echo.
-
-set "SQLITE_EXE="
-where sqlite3 >nul 2>nul
-if not errorlevel 1 set "SQLITE_EXE=sqlite3"
-
-if defined SQLITE_EXE (
-  echo Type .tables  .schema  .exit to navigate
-  echo.
-  "%SQLITE_EXE%" "%DB_PATH%"
-) else (
-  python "%SCRIPT_DIR%sqlite_shell.py" "%DB_PATH%"
-)
-
-echo.
-echo SQLite session closed.
+echo MySQL session closed.
 pause
 goto menu
