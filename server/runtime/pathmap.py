@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from config import CLIENT_LIB_ROOT, CLIENT_PAGES_ROOT
+_PROJECT_ROOT    = Path(__file__).resolve().parent.parent.parent
+CLIENT_PAGES_ROOT = _PROJECT_ROOT / "client" / "pages"
+CLIENT_LIB_ROOT   = _PROJECT_ROOT / "client" / "lib"
 
 STATIC_PREFIXES = {
     "/pages/": CLIENT_PAGES_ROOT,
