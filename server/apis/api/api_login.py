@@ -1,32 +1,40 @@
-from __future__ import annotations
-
-import base64
-
-from apis.tools.sql import *
-
-
-def _decode_password(raw: str) -> str:
-    if not raw:
-        return ""
-    try:
-        return base64.b64decode(raw).decode("utf-8")
-    except Exception:
-        return raw
+import os, sys
+sys.path.append(os.path.dirname(__file__))
+from tools.sql  import *
+from tools.db_ses  import *
 
 
-def api_login(data: dict) -> dict:
-    payload = data.get("post", {})
-    info = payload.get("info", {})
-    user_input = payload.get("input", {})
+#
+# *** API ***
+# check login
+#
+# called from cgi.py
 
-    username = str(user_input.get("u") or payload.get("username") or "").strip()
-    password = _decode_password(str(user_input.get("p") or payload.get("password") or "").strip())
+def login(u,p):
+    a= find_in_sql({'table':'users','fld':'username','val':u,'what':'id,sis'})
+    #print(f" a = {a}")
+    if a==False:
+        return False
+    uid=a[0]
+    sis=a[1]
+    if sis==p:
+        ses=create_new_ses(uid)
+        if ses==0:
+            return False
+        return {'uid':uid, 'ses':ses}
+    else:
+        return False
 
-    row = verify_login(username, password)
-    if row is None:
-        log_event("WARN", "login_failed", f"Login failed for '{username}'", {"username": username, "os": info.get("os", "")}, source="api")
-        return {"server": {"user": username, "allow": 0}}
-
-    ses = create_session(row["user_id"], {"username": username, "os": info.get("os", "web")})
-    log_event("INFO", "login_ok", f"Login success for '{username}'", {"username": username, "ses": ses}, source="api")
-    return {"server": {"user": username, "allow": 1, "ses": ses}}
+def api_login(data):
+    i = data["post"]["input"]
+    u = i["u"]
+    p = i["p"]
+    a=login(u,p)
+    print(f',"user":"{u}"')
+    if a:
+        print(',"allow":1')
+        print(f',"ses":"{a["ses"]}"')
+    else:
+        print(',"allow":0')
+    return
+    
