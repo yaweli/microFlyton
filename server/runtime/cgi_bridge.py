@@ -4,9 +4,7 @@ import importlib.util
 from functools import lru_cache
 from pathlib import Path
 
-from config import SERVER_ROOT
-
-CGI_ROOT = SERVER_ROOT / "cgi-bin"
+CGI_ROOT = Path(__file__).resolve().parent.parent / "cgi-bin"
 
 
 def _load_module(module_name: str, file_path: Path):
