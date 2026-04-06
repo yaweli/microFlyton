@@ -16,6 +16,7 @@
 # Version 2.14 - ra - sql_sort
 # Version 2.15 - bri - where={}
 # Version 2.16 - support microFlyton sqlite , t.b.c
+# Version 2.17 - support microFlyton mysql
 #
 import os, sys, json, re
 from datetime import datetime
@@ -24,28 +25,41 @@ sys.path.insert(0, '/usr/local/lib/python3.10/dist-packages')
 import importlib.util
 import mysql.connector
 
-sql_v =2.16
+sql_v =2.17
+
+
+def kic_sql_connect():
+  config = kic_config()
+  use_pure = getattr(config, "sys_fly", 0)  # flyton = 0, microFlyton=1
+  connection = mysql.connector.connect(
+      host=config.hostname,
+      user=config.username,
+      password=config.password,
+      database=config.database,
+      use_pure=use_pure
+  )
+  return connection
+
+
 
 def find_in_sql(r):
     import sys
     out = sys.__stdout__
-    config = kic_config()
-    # if_mic = config.get("sys_mic",0) # flyton = 0   , microFlyton=1
+
 
     connection = None
     cursor = None
     try:
-      out.write(f"[sql] host={config.hostname} user={config.username} db={config.database}\n"); out.flush()
-      out.write(f"[sql] calling connect()...\n"); out.flush()
-      use_pure = getattr(config, "sys_fly", 0)
-      connection = mysql.connector.connect(
-          host=config.hostname,
-          user=config.username,
-          password=config.password,
-          database=config.database,
-          use_pure=use_pure
-      )
-      out.write(f"[sql] connect() returned ok\n"); out.flush()
+      pass
+      # connection = mysql.connector.connect(
+      #     host=config.hostname,
+      #     user=config.username,
+      #     password=config.password,
+      #     database=config.database,
+      #     use_pure=use_pure
+      # )
+      connection = kic_sql_connect()
+
       cursor = connection.cursor()
       c = 0
       table=r['table']
