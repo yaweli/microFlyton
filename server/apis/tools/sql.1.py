@@ -16,7 +16,7 @@
 # Version 2.14 - ra - sql_sort
 # Version 2.15 - bri - where={}
 # Version 2.16 - support microFlyton sqlite , t.b.c
-# Version 2.17 - bri - support microFlyton mysql + kic_sql_connect()
+# Version 2.17 - support microFlyton mysql
 #
 import os, sys, json, re
 from datetime import datetime
@@ -26,6 +26,7 @@ import importlib.util
 import mysql.connector
 
 sql_v =2.17
+
 
 def kic_sql_connect():
   config = kic_config()
@@ -40,12 +41,23 @@ def kic_sql_connect():
   return connection
 
 
-def find_in_sql(r):
-    config = kic_config()
 
+def find_in_sql(r):
+    import sys
+    out = sys.__stdout__
+
+
+    connection = None
+    cursor = None
     try:
-      
-      # Connect to the MySQL database
+      pass
+      # connection = mysql.connector.connect(
+      #     host=config.hostname,
+      #     user=config.username,
+      #     password=config.password,
+      #     database=config.database,
+      #     use_pure=use_pure
+      # )
       connection = kic_sql_connect()
 
       cursor = connection.cursor()
@@ -92,13 +104,16 @@ def find_in_sql(r):
       if "all" in r:
         return results
       return results[0]
-    except mysql.connector.Error as err:
+    except BaseException as err:
+      import sys, traceback
+      out = sys.__stdout__
+      out.write(f"\n[sql] find_in_sql ERROR: {type(err).__name__}: {err}\n"); out.flush()
+      traceback.print_exc(file=out); out.flush()
       if cursor:
         cursor.close()
       if connection:
         connection.close()
       return {"status":err}
-    
 
 
 # insert or update sql 
@@ -112,9 +127,17 @@ def find_in_sql(r):
 
 def insert_to_sql(r):
 
+    config = kic_config()
     tera_id= -1
     try:
-      connection = kic_sql_connect()
+      use_pure = getattr(config, "sys_fly", 0)
+      connection = mysql.connector.connect(
+          host=config.hostname,
+          user=config.username,
+          password=config.password,
+          database=config.database,
+          use_pure=use_pure
+      )
       cursor = connection.cursor()
       setdata=''
       set1=sql_set(r["set"])
@@ -155,9 +178,20 @@ def insert_to_sql(r):
 
 
 def count_in_sql(r):
-
+    file_path = "../config.py"
+    spec = importlib.util.spec_from_file_location("config", file_path)
+    config = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(config)
+    
     try:
-      connection = kic_sql_connect()
+      use_pure = getattr(config, "sys_fly", 0)
+      connection = mysql.connector.connect(
+          host=config.hostname,
+          user=config.username,
+          password=config.password,
+          database=config.database,
+          use_pure=use_pure
+      )
       cursor = connection.cursor()
       query = f"SELECT COUNT(id) FROM {r['table']} where {r['fld']}='{r['val']}'"
       cursor.execute(query)
@@ -248,9 +282,20 @@ def get_next_counter(field, type1 , data={}):
 #
 #####################
 def kic_sql(q,elr=0):
-
+    file_path = "../config.py"
+    spec = importlib.util.spec_from_file_location("config", file_path)
+    config = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(config)
+    
     try:
-      connection = kic_sql_connect()
+      use_pure = getattr(config, "sys_fly", 0)
+      connection = mysql.connector.connect(
+          host=config.hostname,
+          user=config.username,
+          password=config.password,
+          database=config.database,
+          use_pure=use_pure
+      )
       cursor = connection.cursor()
     
       cursor.execute(q)
