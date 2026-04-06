@@ -27,11 +27,15 @@ import mysql.connector
 sql_v =2.16
 
 def find_in_sql(r):
+    import sys
+    out = sys.__stdout__
     config = kic_config()
-    # if_mic = config.get("sys_mic",0) # flyton = 0   , microFlyton=1 
+    # if_mic = config.get("sys_mic",0) # flyton = 0   , microFlyton=1
 
+    connection = None
+    cursor = None
     try:
-      
+      out.write(f"[sql] find_in_sql connecting to {config.hostname}/{config.database}\n"); out.flush()
       # Connect to the MySQL database
       connection = mysql.connector.connect(
           host=config.hostname,
@@ -39,6 +43,7 @@ def find_in_sql(r):
           password=config.password,
           database=config.database
       )
+      out.write(f"[sql] connected\n"); out.flush()
       cursor = connection.cursor()
       c = 0
       table=r['table']
@@ -83,13 +88,16 @@ def find_in_sql(r):
       if "all" in r:
         return results
       return results[0]
-    except mysql.connector.Error as err:
+    except Exception as err:
+      import sys, traceback
+      out = sys.__stdout__
+      out.write(f"\n[sql] find_in_sql ERROR: {err}\n"); out.flush()
+      traceback.print_exc(file=out); out.flush()
       if cursor:
         cursor.close()
       if connection:
         connection.close()
       return {"status":err}
-    
 
 
 # insert or update sql 
