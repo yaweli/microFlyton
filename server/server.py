@@ -26,6 +26,7 @@ def _load_env():
 _load_env()
 
 sys.path.insert(0, str(SERVER_ROOT / "apis"))
+os.chdir(str(SERVER_ROOT / "apis"))
 
 APP_NAME          = os.getenv("APP_NAME", "MicroFlyton")
 HOST              = os.getenv("HOST", "127.0.0.1")
