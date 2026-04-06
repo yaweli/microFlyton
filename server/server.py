@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import atexit
 import logging
 import os
 import sys
 import threading
+import traceback
 import webbrowser
 from pathlib import Path
 
@@ -41,6 +43,19 @@ logging.basicConfig(
 )
 
 from runtime.windows_http import create_server
+
+
+def _excepthook(exc_type, exc_value, exc_tb):
+    print("\n[CRASH] Unhandled exception in main thread:", flush=True)
+    traceback.print_exception(exc_type, exc_value, exc_tb)
+
+def _thread_excepthook(args):
+    print(f"\n[CRASH] Unhandled exception in thread {args.thread.name}:", flush=True)
+    traceback.print_exception(args.exc_type, args.exc_value, args.exc_tb)
+
+sys.excepthook = _excepthook
+threading.excepthook = _thread_excepthook
+atexit.register(lambda: print("[EXIT] Server process exiting.", flush=True))
 
 
 def open_browser_once() -> None:
