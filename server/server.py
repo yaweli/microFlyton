@@ -46,11 +46,11 @@ from runtime.windows_http import create_server
 
 
 def _excepthook(exc_type, exc_value, exc_tb):
-    print("\n[CRASH] Unhandled exception in main thread:", flush=True)
+    print("\n[CRASH] Main thread:", flush=True)
     traceback.print_exception(exc_type, exc_value, exc_tb)
 
 def _thread_excepthook(args):
-    print(f"\n[CRASH] Unhandled exception in thread {args.thread.name}:", flush=True)
+    print(f"\n[CRASH] Thread {args.thread.name}:", flush=True)
     traceback.print_exception(args.exc_type, args.exc_value, args.exc_tb)
 
 sys.excepthook = _excepthook
