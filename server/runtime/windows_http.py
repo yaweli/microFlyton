@@ -39,6 +39,7 @@ class MicroFlytonHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urlparse(self.path)
+        print(f"[GET] {parsed.path}", flush=True)
         if parsed.path == "/":
             html = (
                 f'<!doctype html><html><body><h1>{APP_NAME}</h1>'
@@ -49,13 +50,17 @@ class MicroFlytonHandler(BaseHTTPRequestHandler):
             body = json.dumps({"ok": True, "app": APP_NAME}).encode("utf-8")
             return self._send_bytes(200, body, "application/json; charset=utf-8")
         if parsed.path in CGI_PAGE_PATHS:
+            print(f"[GET] -> render_page_request", flush=True)
             data = render_page_request(parsed.query)
             return self._send_bytes(200, data, "text/html; charset=utf-8")
         if parsed.path in CGI_P4WEB_PATHS:
+            print(f"[GET] -> render_p4web_request", flush=True)
             data = render_p4web_request(parsed.query)
             return self._send_bytes(200, data, "text/html; charset=utf-8")
         if parsed.path in CGI_API_PATHS:
+            print(f"[GET] -> render_api_request", flush=True)
             data = render_api_request(parsed.query, b"")
+            print(f"[GET] -> done", flush=True)
             return self._send_bytes(200, data, "application/json; charset=utf-8")
         folder, rel = resolve_static_path(parsed.path)
         if folder is not None:
@@ -71,11 +76,14 @@ class MicroFlytonHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         parsed = urlparse(self.path)
+        print(f"[POST] {parsed.path}", flush=True)
         if parsed.path not in CGI_API_PATHS:
             return self._send_bytes(404, b"Not found", "text/plain; charset=utf-8")
         length = int(self.headers.get("Content-Length", "0") or "0")
         body   = self.rfile.read(length)
+        print(f"[POST] -> render_api_request", flush=True)
         data   = render_api_request(parsed.query, body)
+        print(f"[POST] -> done", flush=True)
         return self._send_bytes(200, data, "application/json; charset=utf-8")
 
 
