@@ -14,9 +14,10 @@ echo Version: 2026.04.04
 echo ==================================
 echo.
 echo Commands:
-echo s  - sql      - Open SQLite terminal
-echo i  - install  - Prepare folders and DB path
+echo s  - sql      - Open MySQL terminal
+echo i  - install  - Install MySQL and prepare environment
 echo r  - run      - Run MicroFlyton service
+echo l  - log      - Tail server log (Ctrl+C to stop)
 echo u  - pull     - Pull latest code from GitHub safely
 echo rg - register - Register MicroFlyton in Windows startup
 echo delete        - Delete and uninstall MicroFlyton code
@@ -30,6 +31,9 @@ if not defined CMD_IN exit /b 0
 
 if /i "!CMD_IN!"=="s"        goto run_sql
 if /i "!CMD_IN!"=="sql"      goto run_sql
+
+if /i "!CMD_IN!"=="l"        goto view_log
+if /i "!CMD_IN!"=="log"      goto view_log
 
 if /i "!CMD_IN!"=="i"        goto install_app
 if /i "!CMD_IN!"=="install"  goto install_app
@@ -173,6 +177,23 @@ if errorlevel 1 (
 echo.
 echo Pull completed.
 pause
+goto menu
+
+:view_log
+set "LOG_FILE=%APP_DIR%\server\logs\server.log"
+if not exist "%LOG_FILE%" (
+  echo.
+  echo Log file not found: %LOG_FILE%
+  echo Start the server first.
+  echo.
+  pause
+  goto menu
+)
+echo.
+echo Tailing: %LOG_FILE%
+echo Press Ctrl+C to stop.
+echo.
+powershell -Command "Get-Content -Path '%LOG_FILE%' -Wait"
 goto menu
 
 :run_sql
