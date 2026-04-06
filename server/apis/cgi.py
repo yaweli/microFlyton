@@ -83,14 +83,16 @@ def handle_api_request(query_string: str, body: bytes) -> bytes:
         return f'{{"server":{{{base},"allow":0,"err":"method implementation not found"}}}}'.encode("utf-8")
 
     # capture print() output - all Flyton APIs respond via print()
+    print(f"[API] calling {method}", flush=True)
     buf = io.StringIO()
     try:
         with contextlib.redirect_stdout(buf):
             func({"par": params, "post": payload})
-    except Exception as exc:
+    except BaseException as exc:
         tb = traceback.format_exc()
-        print(f"\n[ERROR] api {method}: {exc}\n{tb}", flush=True)
-        return f'{{"server":{{{base},"allow":0,"err":"api exception: {str(exc)}"}}}}'.encode("utf-8")
+        print(f"\n[CRASH] api {method}: {exc}\n{tb}", flush=True)
+        raise
+    print(f"[API] {method} done", flush=True)
 
     captured = buf.getvalue().strip().lstrip(",").strip()
     if captured:
