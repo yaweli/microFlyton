@@ -156,8 +156,7 @@ if %errorlevel%==0 (
 
 echo.
 echo Pulling latest code...
-git -C "%APP_DIR%" fetch origin
-git -C "%APP_DIR%" reset --hard origin/main   # or master
+git -C "%APP_DIR%" pull --ff-only
 if errorlevel 1 (
   echo.
   echo Pull failed.
