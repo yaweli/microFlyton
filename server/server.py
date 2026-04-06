@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
+import sys
 import threading
 import webbrowser
 from pathlib import Path
@@ -23,6 +24,8 @@ def _load_env():
         os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
 
 _load_env()
+
+sys.path.insert(0, str(SERVER_ROOT / "apis"))
 
 APP_NAME          = os.getenv("APP_NAME", "MicroFlyton")
 HOST              = os.getenv("HOST", "127.0.0.1")

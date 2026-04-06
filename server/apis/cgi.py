@@ -29,7 +29,10 @@ def _resolve_method(method: str) -> tuple[str, str] | None:
             importlib.import_module(module_name)
             return module_name, func_name
         except ModuleNotFoundError as e:
+            import os, sys
             print(f"[cgi] module not found: {module_name} -> {e}", flush=True)
+            print(f"[cgi] cwd: {os.getcwd()}", flush=True)
+            print(f"[cgi] sys.path: {sys.path}", flush=True)
             continue
     return None
 
