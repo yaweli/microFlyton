@@ -41,7 +41,8 @@ def find_in_sql(r):
           host=config.hostname,
           user=config.username,
           password=config.password,
-          database=config.database
+          database=config.database,
+          use_pure=True
       )
       out.write(f"[sql] connect() returned ok\n"); out.flush()
       cursor = connection.cursor()
@@ -118,7 +119,8 @@ def insert_to_sql(r):
           host=config.hostname,
           user=config.username,
           password=config.password,
-          database=config.database
+          database=config.database,
+          use_pure=True
       )
       cursor = connection.cursor()
       setdata=''
@@ -170,7 +172,8 @@ def count_in_sql(r):
           host=config.hostname,
           user=config.username,
           password=config.password,
-          database=config.database
+          database=config.database,
+          use_pure=True
       )
       cursor = connection.cursor()
       query = f"SELECT COUNT(id) FROM {r['table']} where {r['fld']}='{r['val']}'"
@@ -272,7 +275,8 @@ def kic_sql(q,elr=0):
           host=config.hostname,
           user=config.username,
           password=config.password,
-          database=config.database
+          database=config.database,
+          use_pure=True
       )
       cursor = connection.cursor()
     
