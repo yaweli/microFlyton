@@ -22,17 +22,14 @@ def _resolve_method(method: str) -> tuple[str, str] | None:
     if not m:
         return None
     candidates = []
-    if m.startswith("api_"):
-        candidates.append((f"apis.api.{m}", m))
-        candidates.append((f"apis.api.{m[4:]}", m))
-    else:
-        candidates.append((f"apis.api.{m}", f"api_{m}"))
-        candidates.append((f"apis.api.api_{m}", f"api_{m}"))
+    candidates.append((f"apis.api.{m}", m))
+
     for module_name, func_name in candidates:
         try:
             importlib.import_module(module_name)
             return module_name, func_name
         except ModuleNotFoundError:
+            print("Error")
             continue
     return None
 
