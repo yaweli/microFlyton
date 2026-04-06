@@ -11,18 +11,23 @@ from tools.db_ses  import *
 # called from cgi.py
 
 def login(u,p):
+    import sys
+    out = sys.__stdout__
     a= find_in_sql({'table':'users','fld':'username','val':u,'what':'id,sis'})
-    #print(f" a = {a}")
+    out.write(f"[login] find result: {a}\n"); out.flush()
     if a==False:
+        out.write(f"[login] user '{u}' not found in db\n"); out.flush()
         return False
     uid=a[0]
     sis=a[1]
     if sis==p:
         ses=create_new_ses(uid)
         if ses==0:
+            out.write(f"[login] create_new_ses failed\n"); out.flush()
             return False
         return {'uid':uid, 'ses':ses}
     else:
+        out.write(f"[login] wrong password for '{u}'\n"); out.flush()
         return False
 
 def api_login(data):
