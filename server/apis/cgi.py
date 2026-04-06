@@ -28,8 +28,8 @@ def _resolve_method(method: str) -> tuple[str, str] | None:
         try:
             importlib.import_module(module_name)
             return module_name, func_name
-        except ModuleNotFoundError:
-            print("Error")
+        except ModuleNotFoundError as e:
+            print(f"[cgi] module not found: {module_name} -> {e}", flush=True)
             continue
     return None
 
