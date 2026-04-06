@@ -35,15 +35,15 @@ def find_in_sql(r):
     connection = None
     cursor = None
     try:
-      out.write(f"[sql] find_in_sql connecting to {config.hostname}/{config.database}\n"); out.flush()
-      # Connect to the MySQL database
+      out.write(f"[sql] host={config.hostname} user={config.username} db={config.database}\n"); out.flush()
+      out.write(f"[sql] calling connect()...\n"); out.flush()
       connection = mysql.connector.connect(
           host=config.hostname,
           user=config.username,
           password=config.password,
           database=config.database
       )
-      out.write(f"[sql] connected\n"); out.flush()
+      out.write(f"[sql] connect() returned ok\n"); out.flush()
       cursor = connection.cursor()
       c = 0
       table=r['table']
@@ -88,10 +88,10 @@ def find_in_sql(r):
       if "all" in r:
         return results
       return results[0]
-    except Exception as err:
+    except BaseException as err:
       import sys, traceback
       out = sys.__stdout__
-      out.write(f"\n[sql] find_in_sql ERROR: {err}\n"); out.flush()
+      out.write(f"\n[sql] find_in_sql ERROR: {type(err).__name__}: {err}\n"); out.flush()
       traceback.print_exc(file=out); out.flush()
       if cursor:
         cursor.close()
