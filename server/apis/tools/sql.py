@@ -37,12 +37,13 @@ def find_in_sql(r):
     try:
       out.write(f"[sql] host={config.hostname} user={config.username} db={config.database}\n"); out.flush()
       out.write(f"[sql] calling connect()...\n"); out.flush()
+      use_pure = getattr(config, "sys_fly", 0)
       connection = mysql.connector.connect(
           host=config.hostname,
           user=config.username,
           password=config.password,
           database=config.database,
-          use_pure=True
+          use_pure=use_pure
       )
       out.write(f"[sql] connect() returned ok\n"); out.flush()
       cursor = connection.cursor()
@@ -115,12 +116,13 @@ def insert_to_sql(r):
     config = kic_config()
     tera_id= -1
     try:
+      use_pure = getattr(config, "sys_fly", 0)
       connection = mysql.connector.connect(
           host=config.hostname,
           user=config.username,
           password=config.password,
           database=config.database,
-          use_pure=True
+          use_pure=use_pure
       )
       cursor = connection.cursor()
       setdata=''
@@ -168,12 +170,13 @@ def count_in_sql(r):
     spec.loader.exec_module(config)
     
     try:
+      use_pure = getattr(config, "sys_fly", 0)
       connection = mysql.connector.connect(
           host=config.hostname,
           user=config.username,
           password=config.password,
           database=config.database,
-          use_pure=True
+          use_pure=use_pure
       )
       cursor = connection.cursor()
       query = f"SELECT COUNT(id) FROM {r['table']} where {r['fld']}='{r['val']}'"
@@ -271,12 +274,13 @@ def kic_sql(q,elr=0):
     spec.loader.exec_module(config)
     
     try:
+      use_pure = getattr(config, "sys_fly", 0)
       connection = mysql.connector.connect(
           host=config.hostname,
           user=config.username,
           password=config.password,
           database=config.database,
-          use_pure=True
+          use_pure=use_pure
       )
       cursor = connection.cursor()
     
