@@ -26,15 +26,22 @@ def login(u,p):
         return False
 
 def api_login(data):
+    import sys
+    out = sys.__stdout__
+    out.write("[api_login] start\n"); out.flush()
     i = data["post"]["input"]
+    out.write(f"[api_login] u={i.get('u')} p=***\n"); out.flush()
     u = i["u"]
     p = i["p"]
+    out.write("[api_login] calling login()\n"); out.flush()
     a=login(u,p)
+    out.write(f"[api_login] login() returned: {a}\n"); out.flush()
     print(f',"user":"{u}"')
     if a:
         print(',"allow":1')
         print(f',"ses":"{a["ses"]}"')
     else:
         print(',"allow":0')
+    out.write("[api_login] done\n"); out.flush()
     return
     
