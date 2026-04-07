@@ -82,15 +82,6 @@ class MicroFlytonHandler(BaseHTTPRequestHandler):
             return self._send_bytes(200, file_path.read_bytes(), guess_type(file_path))
         return self._send_bytes(404, b"Not found", "text/plain; charset=utf-8")
 
-    def do_STOP(self):
-        client_ip = self.client_address[0]
-        if client_ip not in ("127.0.0.1", "::1", "localhost"):
-            self._send_bytes(403, b"Forbidden", "text/plain; charset=utf-8")
-            return
-        self._send_bytes(200, b'{"ok":true,"msg":"stopping"}', "application/json; charset=utf-8")
-        print(f"[STOP] Shutdown requested by {client_ip}", flush=True)
-        threading.Thread(target=self.server.shutdown, daemon=True).start()
-
     def do_POST(self):
         parsed = urlparse(self.path)
         print(f"[POST] {parsed.path}", flush=True)
