@@ -130,6 +130,50 @@ main.mf-main {
     letter-spacing: -1px;
 }
 
+/* ── User avatar ─────────────────────────────────────────── */
+
+.mf-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6c8fff, #a855f7);
+    color: #fff;
+    font-size: .8rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(108,143,255,.45);
+    transition: transform .15s, box-shadow .15s;
+    user-select: none;
+    letter-spacing: .5px;
+}
+.mf-avatar:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 14px rgba(108,143,255,.6);
+}
+.mf-avatar-lg {
+    width: 64px;
+    height: 64px;
+    font-size: 1.4rem;
+}
+
+.mf-user-modal {
+    border: none;
+    border-radius: 18px;
+    box-shadow: 0 12px 40px rgba(0,0,0,.18);
+}
+.mf-modal-name {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #1a1f2e;
+}
+.mf-modal-role {
+    font-size: .82rem;
+}
+
 /* ── Footer ──────────────────────────────────────────────── */
 
 footer {

@@ -17,6 +17,7 @@ echo Commands:
 echo s  - sql      - Open MySQL terminal
 echo i  - install  - Install MySQL and prepare environment
 echo r  - run      - Run MicroFlyton service
+echo t  - stop     - Stop the running MicroFlyton service
 echo l  - log      - Tail server log (Ctrl+C to stop)
 echo u  - pull     - Pull latest code from GitHub safely
 echo rg - register - Register MicroFlyton in Windows startup
@@ -40,6 +41,9 @@ if /i "!CMD_IN!"=="install"  goto install_app
 
 if /i "!CMD_IN!"=="r"        goto run_app
 if /i "!CMD_IN!"=="run"      goto run_app
+
+if /i "!CMD_IN!"=="t"        goto stop_app
+if /i "!CMD_IN!"=="stop"     goto stop_app
 
 if /i "!CMD_IN!"=="u"        goto pull_app
 if /i "!CMD_IN!"=="pull"     goto pull_app
@@ -90,6 +94,15 @@ goto menu
 
 :run_app
 call "%SCRIPT_DIR%run_microflyton.bat"
+pause
+goto menu
+
+:stop_app
+call :load_env
+echo.
+echo Sending STOP to http://127.0.0.1:%PORT%/ ...
+powershell -Command "try { Invoke-WebRequest -Uri 'http://127.0.0.1:%PORT%/' -Method STOP -TimeoutSec 5 | Out-Null; Write-Host 'Server stopped.' } catch { Write-Host 'Could not reach server (may already be stopped).' }"
+echo.
 pause
 goto menu
 

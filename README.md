@@ -99,3 +99,9 @@ Then use:
 ## Login
 - username: `kic`
 - password: `fly123`
+
+---
+
+## Screenshot
+
+![MicroFlyton Dashboard](microfly.png)
