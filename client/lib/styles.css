@@ -221,6 +221,127 @@ footer a:hover { color: #fff; }
 .kicmenusel  { color: #f8bbd0; text-decoration: none; margin: 0 12px; font-weight: 600; }
 .kicmenuinline { color: #222; text-decoration: none; margin: 0 12px; font-weight: 600; }
 
+/* ── Profile card ────────────────────────────────────────── */
+
+.mf-profile-card {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(0,0,0,.09);
+    overflow: hidden;
+}
+
+.mf-profile-banner {
+    height: 80px;
+    background: linear-gradient(135deg, #4361ee, #a855f7);
+}
+
+.mf-profile-body {
+    padding: 0 28px 28px;
+    text-align: center;
+}
+
+.mf-profile-avatar {
+    margin-top: -32px;
+    border: 3px solid #fff;
+    box-shadow: 0 4px 14px rgba(108,143,255,.4);
+}
+
+.mf-profile-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1a1f2e;
+    margin-top: 10px;
+}
+
+.mf-profile-username {
+    font-size: .85rem;
+    margin-bottom: 4px;
+}
+
+.mf-profile-fields {
+    text-align: left;
+}
+
+.mf-profile-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f2f5;
+    gap: 12px;
+}
+.mf-profile-row:last-child { border-bottom: none; }
+
+.mf-profile-label {
+    font-size: .78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    color: #8892aa;
+    flex-shrink: 0;
+}
+
+.mf-profile-value {
+    font-size: .9rem;
+    color: #1a1f2e;
+    font-weight: 500;
+    text-align: right;
+}
+
+/* ── Admin / info card ───────────────────────────────────── */
+
+.mf-info-card {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(0,0,0,.09);
+    overflow: hidden;
+}
+
+.mf-info-card-title {
+    background: linear-gradient(135deg, #1a1f2e, #2d3561);
+    color: #fff;
+    font-size: .92rem;
+    font-weight: 600;
+    padding: 16px 20px;
+    letter-spacing: .3px;
+}
+
+.mf-info-card-body {
+    padding: 4px 20px 8px;
+}
+
+.mf-mono {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: .82rem;
+    color: #4361ee;
+}
+
+.mf-badge-active {
+    display: inline-block;
+    background: #d1fae5;
+    color: #065f46;
+    border-radius: 20px;
+    padding: 2px 12px;
+    font-size: .78rem;
+    font-weight: 600;
+}
+
+.mf-ses-full-id {
+    background: #f8f9ff;
+    border: 1px solid #e2e6ff;
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-top: 8px;
+    word-break: break-all;
+}
+
+.mf-ses-token {
+    font-size: .78rem;
+    color: #4361ee;
+    background: none;
+    padding: 0;
+}
+
 /* ── General helpers ─────────────────────────────────────── */
 
 .kicbody { min-height: 500px; }
