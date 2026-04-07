@@ -160,18 +160,42 @@ main.mf-main {
     font-size: 1.4rem;
 }
 
-.mf-user-modal {
+.mf-avatar-sm {
+    width: 42px;
+    height: 42px;
+    font-size: .9rem;
+}
+
+.mf-avatar-menu {
+    min-width: 210px;
     border: none;
-    border-radius: 18px;
-    box-shadow: 0 12px 40px rgba(0,0,0,.18);
+    border-radius: 14px;
+    padding: 0;
+    overflow: hidden;
+    margin-top: 8px !important;
 }
-.mf-modal-name {
-    font-size: 1.15rem;
-    font-weight: 700;
+
+.mf-avatar-menu-header {
+    background: linear-gradient(135deg, #1a1f2e, #2d3561);
+    color: #fff;
+}
+
+.mf-avatar-menu .dropdown-item {
+    padding: 9px 18px;
+    font-size: .88rem;
     color: #1a1f2e;
+    transition: background .12s;
 }
-.mf-modal-role {
-    font-size: .82rem;
+.mf-avatar-menu .dropdown-item:hover {
+    background: #f0f2ff;
+    color: #4361ee;
+}
+.mf-avatar-menu .dropdown-item.text-danger:hover {
+    background: #fff0f0;
+    color: #dc3545;
+}
+.mf-avatar-menu .dropdown-divider {
+    margin: 0;
 }
 
 /* ── Footer ──────────────────────────────────────────────── */

@@ -42,24 +42,25 @@ def header(data):
             </ul>
             <div class="d-flex align-items-center gap-3">
                 <a class="btn btn-outline-light btn-sm" href="/pages/index.html">Logout</a>
-                <div class="mf-avatar" data-bs-toggle="modal" data-bs-target="#userModal" title="{display}">
-                    {initials}
+                <div class="dropdown">
+                    <div class="mf-avatar" data-bs-toggle="dropdown" aria-expanded="false" title="{display}">
+                        {initials}
+                    </div>
+                    <ul class="dropdown-menu dropdown-menu-end mf-avatar-menu shadow">
+                        <li class="mf-avatar-menu-header px-3 py-2">
+                            <div class="mf-avatar mf-avatar-sm mx-auto mb-1">{initials}</div>
+                            <div class="fw-semibold text-center small">{display}</div>
+                            <div class="text-muted text-center" style="font-size:.75rem">@{username if urow else display}</div>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/cgi-bin/p?ses={ses}&rpage=profile">&#128100;&nbsp; Profile</a></li>
+                        <li><a class="dropdown-item" href="/cgi-bin/p?ses={ses}&rpage=admin">&#9881;&#65039;&nbsp; Admin</a></li>
+                        <li><a class="dropdown-item" href="/cgi-bin/p?ses={ses}&rpage=plugins">&#129059;&nbsp; Plugins</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="/pages/index.html">&#128275;&nbsp; Logout</a></li>
+                    </ul>
                 </div>
             </div>
         </div>
     </nav>
-
-    <!-- User modal -->
-    <div class="modal fade" id="userModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" style="max-width:320px">
-            <div class="modal-content mf-user-modal">
-                <div class="modal-body text-center py-4">
-                    <div class="mf-avatar mf-avatar-lg mx-auto mb-3">{initials}</div>
-                    <div class="mf-modal-name">{display}</div>
-                    <div class="mf-modal-role text-muted small mt-1">@{username if urow else display}</div>
-                    <a href="/pages/index.html" class="btn btn-sm btn-outline-danger mt-3 w-100">Logout</a>
-                </div>
-            </div>
-        </div>
-    </div>
     """)
