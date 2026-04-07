@@ -1,3 +1,6 @@
+rem 
+rem (c) 2026 Microflyton 
+rem 
 @echo off
 setlocal EnableExtensions EnableDelayedExpansion
 
