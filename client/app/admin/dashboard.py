@@ -11,30 +11,26 @@ def dashboard(data):
     total_ses = w[0][0] if w else 0
 
     h = f"""
-    <div class="col-12 mt-4 px-4">
-        <h4 class="mb-4 text-secondary">Dashboard</h4>
+    <div class="col-12 px-4 pt-4">
+        <div class="mf-page-title">&#128202; Dashboard</div>
         <div class="row g-4">
 
-            <div class="col-md-4">
-                <div class="card text-white bg-primary shadow h-100">
-                    <div class="card-body d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="text-uppercase small opacity-75">Total Users</div>
-                            <div class="display-5 fw-bold">{total_users}</div>
-                        </div>
-                        <div class="fs-1 opacity-50">&#128100;</div>
+            <div class="col-sm-6 col-xl-4">
+                <div class="mf-stat-card blue">
+                    <div class="mf-stat-icon">&#128100;</div>
+                    <div class="mf-stat-info">
+                        <div class="mf-stat-label">Total Users</div>
+                        <div class="mf-stat-value">{total_users}</div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-4">
-                <div class="card text-white bg-success shadow h-100">
-                    <div class="card-body d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="text-uppercase small opacity-75">Active Sessions</div>
-                            <div class="display-5 fw-bold">{total_ses}</div>
-                        </div>
-                        <div class="fs-1 opacity-50">&#128274;</div>
+            <div class="col-sm-6 col-xl-4">
+                <div class="mf-stat-card green">
+                    <div class="mf-stat-icon">&#128274;</div>
+                    <div class="mf-stat-info">
+                        <div class="mf-stat-label">Active Sessions</div>
+                        <div class="mf-stat-value">{total_ses}</div>
                     </div>
                 </div>
             </div>

@@ -1,114 +1,160 @@
-/* General Styles */
-body {
-    font-family: Arial, sans-serif;
+/* ── MicroFlyton global styles ───────────────────────────── */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body.mf-body {
     margin: 0;
     padding: 0;
-    color: #333;
-}
-
-.kicbody {
-    min-height:600px;
-}
-.kicmenu {
-    color: white;
-    text-decoration: none;
-    margin: 0 15px;
-    font-weight: bold;
-}
-.kicmenuinline {
-    color: black;
-    text-decoration: none;
-    margin: 0 15px;
-    font-weight: bold;
-}
-.kicmenusel {
-    color: pink;
-    text-decoration: none;
-    margin: 0 15px;
-    font-weight: bold;
-}
-
-/* Header */
-
-header {
-    background-color: #004990; 
-    color: white;
-    padding: 10px 20px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #f0f2f5;
+    color: #222;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.sysdev {
-
-}
-.syslive {
-        background-color: #8412db;
-}
-.toolbar {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
-.zmenu a {
-    color: white;
-    text-decoration: none;
-    margin: 0 15px;
-    font-weight: bold;
+/* ── Main content area ───────────────────────────────────── */
+
+main.mf-main {
+    flex: 1;
+    padding: 32px 24px;
+    background: #f0f2f5;
 }
 
-.menu a:hover {
-    color: #d63384; /* Pink */
+/* ── Navbar overrides ────────────────────────────────────── */
+
+.navbar.bg-dark {
+    background: #1a1f2e !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,.35);
 }
 
-.user-profile {
+.navbar-brand {
+    font-size: 1.15rem;
+    letter-spacing: .5px;
+    color: #e8eaf6 !important;
+}
+
+.nav-link {
+    color: #bdc3d8 !important;
+    font-size: .9rem;
+    transition: color .15s;
+}
+.nav-link:hover, .nav-link.active {
+    color: #fff !important;
+}
+.nav-link.active {
+    border-bottom: 2px solid #6c8fff;
+    padding-bottom: 2px;
+}
+
+/* ── Dashboard page title ────────────────────────────────── */
+
+.mf-page-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #1a1f2e;
+    margin-bottom: 28px;
     display: flex;
     align-items: center;
+    gap: 10px;
+}
+.mf-page-title::after {
+    content: '';
+    flex: 1;
+    height: 2px;
+    background: linear-gradient(90deg, #6c8fff33, transparent);
+    border-radius: 2px;
 }
 
-.user-profile i {
-    color: white;
-    margin-right: 15px;
-    font-size: 18px;
-    cursor: pointer;
-}
+/* ── Stat cards ──────────────────────────────────────────── */
 
-.user-profile img {
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    margin-left: 10px;
-}
-/* Main Body */
-main {
-    padding: 20px;
-    background-color: #e9ecef; /* Light grey */
-    flex-grow: 1;
-}
-
-section {
-    margin-bottom: 20px;
-}
-
-h1, h2 {
-    color: #004990; /* Purple */
-}
-
-/* Footer */
-footer {
-    background-color: #004990; /* Purple */
-    color: white;
-    text-align: center;
-    padding: 10px 0;
+.mf-stat-card {
+    border: none;
+    border-radius: 16px;
+    padding: 28px 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 4px 18px rgba(0,0,0,.10);
+    transition: transform .15s, box-shadow .15s;
     position: relative;
+    overflow: hidden;
+}
+.mf-stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 28px rgba(0,0,0,.16);
+}
+
+/* colour variants */
+.mf-stat-card.blue  { background: linear-gradient(135deg, #4361ee, #3a86ff); color: #fff; }
+.mf-stat-card.green { background: linear-gradient(135deg, #2ec4b6, #06d6a0); color: #fff; }
+.mf-stat-card.purple{ background: linear-gradient(135deg, #7b2d8b, #a855f7); color: #fff; }
+.mf-stat-card.orange{ background: linear-gradient(135deg, #f77f00, #fcbf49); color: #fff; }
+
+/* decorative circle */
+.mf-stat-card::after {
+    content: '';
+    position: absolute;
+    right: -20px;
+    top: -20px;
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.12);
+}
+
+.mf-stat-icon {
+    font-size: 2.4rem;
+    flex-shrink: 0;
+    z-index: 1;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,.2));
+}
+
+.mf-stat-info {
+    z-index: 1;
+}
+
+.mf-stat-label {
+    font-size: .78rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    opacity: .82;
+    margin-bottom: 4px;
+}
+
+.mf-stat-value {
+    font-size: 2.6rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -1px;
+}
+
+/* ── Footer ──────────────────────────────────────────────── */
+
+footer {
+    background: #1a1f2e;
+    color: #8892aa;
+    text-align: center;
+    padding: 14px 0;
+    font-size: .82rem;
+    letter-spacing: .3px;
 }
 
 footer a {
-    color: #17a2b8; /* Cyan */
+    color: #6c8fff;
     text-decoration: none;
-    margin: 0 10px;
 }
+footer a:hover { color: #fff; }
 
-footer a:hover {
-    color: #d63384; /* Pink */
-}
+/* ── Sidebar / nav links in body ─────────────────────────── */
+
+.kicmenu     { color: #fff;  text-decoration: none; margin: 0 12px; font-weight: 600; }
+.kicmenusel  { color: #f8bbd0; text-decoration: none; margin: 0 12px; font-weight: 600; }
+.kicmenuinline { color: #222; text-decoration: none; margin: 0 12px; font-weight: 600; }
+
+/* ── General helpers ─────────────────────────────────────── */
+
+.kicbody { min-height: 500px; }
+
+h1, h2 { color: #1a1f2e; }

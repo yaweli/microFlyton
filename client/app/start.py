@@ -26,7 +26,7 @@ def main(data):
     # session data saved on our side
     # sdata is out side session data
     # first time , it's empty
-    
+
     w=find_in_sql({'table':'ses','fld':'id','val':ses,'what':'user_id,is_active',"is_active":1})
 
     if type(w) is bool and w==False:
@@ -46,8 +46,27 @@ def main(data):
     # default first time page
     if not "page" in data["s"]:
         data["s"]["page"]="dashboard"
+
+    print("""<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MicroFlyton</title>
+  <link href="/lib/bootstrap.min.css" rel="stylesheet">
+  <link href="/lib/styles.css" rel="stylesheet">
+  <script src="/lib/bootstrap.bundle.min.js"></script>
+  <script src="/lib/kicdev.server.js"></script>
+  <script src="/lib/kicdev.bs5.js"></script>
+</head>
+<body class="mf-body">
+""")
     header(data)
+    print('<main class="mf-main">')
     body_admin(data)
+    print('</main>')
     footer(data)
+    print("""</body>
+</html>""")
  
 
