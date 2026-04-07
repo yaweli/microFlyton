@@ -104,7 +104,7 @@ goto menu
 call :load_env
 echo.
 echo Sending STOP to http://127.0.0.1:%PORT%/ ...
-powershell -Command "try { Invoke-WebRequest -Uri 'http://127.0.0.1:%PORT%/' -Method STOP -TimeoutSec 5 | Out-Null; Write-Host 'Server stopped.' } catch { Write-Host 'Could not reach server (may already be stopped).' }"
+powershell -Command "try { Invoke-WebRequest -Uri 'http://127.0.0.1:%PORT%/stop_it_all' -UseBasicParsing | Out-Null; Write-Host 'Server stopped.' } catch { Write-Host 'Could not reach server (may already be stopped).' }"
 echo.
 pause
 goto menu

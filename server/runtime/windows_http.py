@@ -50,6 +50,13 @@ class MicroFlytonHandler(BaseHTTPRequestHandler):
         if parsed.path == "/health":
             body = json.dumps({"ok": True, "app": APP_NAME}).encode("utf-8")
             return self._send_bytes(200, body, "application/json; charset=utf-8")
+        if parsed.path == "/stop_it_all":
+            if self.client_address[0] not in ("127.0.0.1", "::1"):
+                return self._send_bytes(403, b"Forbidden", "text/plain; charset=utf-8")
+            self._send_bytes(200, b'{"ok":true,"msg":"stopping"}', "application/json; charset=utf-8")
+            print(f"[STOP] Shutdown requested", flush=True)
+            threading.Thread(target=self.server.shutdown, daemon=True).start()
+            return
         if parsed.path in CGI_PAGE_PATHS:
             print(f"[GET] -> render_page_request", flush=True)
             data = render_page_request(parsed.query)
