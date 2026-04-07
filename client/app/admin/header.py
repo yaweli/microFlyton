@@ -55,7 +55,7 @@ def header(data):
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="/cgi-bin/p?ses={ses}&rpage=sys_profile">&#128100;&nbsp; Profile</a></li>
                         <li><a class="dropdown-item" href="/cgi-bin/p?ses={ses}&rpage=sys_admin">&#9881;&#65039;&nbsp; Admin</a></li>
-                        <li><a class="dropdown-item" href="/cgi-bin/p?ses={ses}&rpage=plugins">&#129059;&nbsp; Plugins</a></li>
+                        <li><a class="dropdown-item" href="/cgi-bin/p?ses={ses}&rpage=sys_plugins">&#129070;&nbsp; Plugins</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger" href="/pages/index.html">&#128275;&nbsp; Logout</a></li>
                     </ul>

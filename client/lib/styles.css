@@ -342,6 +342,65 @@ footer a:hover { color: #fff; }
     padding: 0;
 }
 
+/* ── Plugin cards ────────────────────────────────────────── */
+
+.mf-plugin-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px 20px;
+    box-shadow: 0 4px 18px rgba(0,0,0,.08);
+    text-align: center;
+    transition: transform .15s, box-shadow .15s;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.mf-plugin-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 28px rgba(0,0,0,.13);
+}
+
+.mf-plugin-icon {
+    font-size: 2.2rem;
+    margin-bottom: 10px;
+}
+
+.mf-plugin-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1a1f2e;
+}
+
+.mf-plugin-date {
+    font-size: .78rem;
+}
+
+.mf-plugin-empty {
+    text-align: center;
+    padding: 48px 0;
+}
+
+.mf-badge-public {
+    display: inline-block;
+    background: #dbeafe;
+    color: #1d4ed8;
+    border-radius: 20px;
+    padding: 2px 14px;
+    font-size: .75rem;
+    font-weight: 600;
+}
+
+.mf-badge-private {
+    display: inline-block;
+    background: #f3e8ff;
+    color: #7e22ce;
+    border-radius: 20px;
+    padding: 2px 14px;
+    font-size: .75rem;
+    font-weight: 600;
+}
+
 /* ── General helpers ─────────────────────────────────────── */
 
 .kicbody { min-height: 500px; }
