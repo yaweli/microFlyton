@@ -28,9 +28,10 @@ def sys_plugins1(data):
 
     cards = ""
     for p in catalog:
+        pcode  = p.get("code","")
         pname  = p.get("name","")
         pstate = p.get("state","")
-        inst   = plugin_chk(pname)
+        inst   = plugin_chk(pcode)
 
         state_badge = f'<span class="mf-badge-public">Public</span>' if pstate == "public" \
                       else f'<span class="mf-badge-private">Private</span>'
@@ -38,7 +39,7 @@ def sys_plugins1(data):
         if inst:
             action_btn = '<button class="btn btn-sm btn-secondary w-100 mt-3" disabled>Installed</button>'
         else:
-            add_url = f"/cgi-bin/p?ses={ses}&rpage=sys_plugins1&action=add&plugin_code={pname}"
+            add_url = f"/cgi-bin/p?ses={ses}&rpage=sys_plugins1&action=add&plugin_code={pcode}"
             action_btn = f'<a href="{add_url}" class="btn btn-sm btn-success w-100 mt-3">&#43; Install</a>'
 
         cards += f"""

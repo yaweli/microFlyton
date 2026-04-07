@@ -194,7 +194,13 @@ if "!READY!"=="0" (
 )
 
 rem ----------------------------------------------------------------
-echo [4/5] Installing mysql-connector-python...
+echo [4/5] Creating required directories...
+call :log "[4/5] creating directories"
+if not exist "%APP_DIR%\client\pages\im" mkdir "%APP_DIR%\client\pages\im"
+call :log "  client/pages/im OK"
+
+rem ----------------------------------------------------------------
+echo [5/6] Installing mysql-connector-python...
 call :log "[4/5] pip install mysql-connector-python"
 python -m pip install mysql-connector-python 2>&1
 if errorlevel 1 (

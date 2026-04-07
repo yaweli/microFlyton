@@ -1,1 +1,1 @@
-{"p":[{"name":"User managements","state":"public"},{"name":"Bridgekey","state":"privet"}]}
+{"p":[{"code":"users","name":"User managements","state":"public"},{"code":"bri","name":"Bridgekey","state":"privet"}]}
