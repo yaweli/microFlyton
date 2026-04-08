@@ -71,8 +71,14 @@ def _unzip(zip_path):
     try:
         if not zipfile.is_zipfile(zip_path):
             return f"not a valid zip file: {zip_path}"
+        dest.mkdir(parents=True, exist_ok=True)
         with zipfile.ZipFile(zip_path, 'r') as z:
-            z.extractall(dest)
+            for member in z.infolist():
+                target = dest / member.filename
+                target.parent.mkdir(parents=True, exist_ok=True)
+                if not member.is_dir():
+                    with z.open(member) as src, open(target, 'wb') as dst:
+                        dst.write(src.read())
         return ""
     except Exception as e:
         return str(e)
