@@ -1,4 +1,5 @@
-import json, random, string, urllib.request
+import json, random, string, subprocess, urllib.request
+from pathlib import Path as _Path
 from pathlib import Path
 from tools.sql import *
 from tools.db_plugins import *
@@ -50,6 +51,15 @@ def _call_verify(plp):
         return {"err": str(e)}
 
 
+def _wget(url, pcode):
+    filename = f"/tmp/mf_plugin_{pcode}.zip"
+    try:
+        subprocess.run(["wget", "-q", "-O", filename, url], timeout=30, check=True)
+        return filename
+    except Exception:
+        return ""
+
+
 def sys_plugins2(data):
     ses    = data["ses"]
     pcode  = data.get("plugin_code", "").strip()
@@ -89,12 +99,16 @@ def sys_plugins2(data):
         err = r.get("err", "Install failed")
         return _result(ses, 0, err, back_catalog)
 
+    zip_file = ""
     if plugin_url:
         w = find_in_sql({'table': 'plugins', 'fld': 'plugin_code', 'val': pcode, 'what': 'id'})
         if w:
             add_to_data("plugins", w[0], "url", plugin_url)
+        zip_file = _wget(plugin_url, pcode)
+        if not zip_file:
+            return _result(ses, 0, "Plugin verified but download failed.", back_catalog)
 
-    return _result(ses, 1, f"Plugin <b>{pname}</b> installed successfully.", back_plugins)
+    return _result(ses, 1, f"Plugin <b>{pname}</b> installed successfully.<br><small class='text-muted'>{zip_file}</small>", back_plugins)
 
 
 def _result(ses, ok, msg, back_url):
