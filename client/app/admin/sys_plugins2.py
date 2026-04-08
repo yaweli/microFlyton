@@ -51,13 +51,24 @@ def _call_verify(plp):
         return {"err": str(e)}
 
 
-def _wget(url, pcode):
-    filename = f"/tmp/mf_plugin_{pcode}.zip"
+def _wget(url):
+    filename = "/tmp/" + url.split("/")[-1]
     try:
-        subprocess.run(["wget", "-q", "-O", filename, url], timeout=30, check=True)
-        return filename
-    except Exception:
-        return ""
+        r = subprocess.run(
+            ["wget", "-q", "-O", filename, url],
+            timeout=30, capture_output=True, text=True
+        )
+        if r.returncode != 0:
+            return filename, f"wget exit {r.returncode}: {r.stderr.strip() or 'no detail'}"
+        if not _Path(filename).exists() or _Path(filename).stat().st_size == 0:
+            return filename, "file empty or missing after download"
+        return filename, ""
+    except subprocess.TimeoutExpired:
+        return filename, "download timed out (30s)"
+    except FileNotFoundError:
+        return filename, "wget not found on this system"
+    except Exception as e:
+        return filename, str(e)
 
 
 def sys_plugins2(data):
@@ -104,9 +115,9 @@ def sys_plugins2(data):
         w = find_in_sql({'table': 'plugins', 'fld': 'plugin_code', 'val': pcode, 'what': 'id'})
         if w:
             add_to_data("plugins", w[0], "url", plugin_url)
-        zip_file = _wget(plugin_url, pcode)
-        if not zip_file:
-            return _result(ses, 0, "Plugin verified but download failed.", back_catalog)
+        zip_file, err = _wget(plugin_url)
+        if err:
+            return _result(ses, 0, f"Plugin verified but download failed.<br><small class='text-muted'>{err}</small>", back_catalog)
 
     return _result(ses, 1, f"Plugin <b>{pname}</b> installed successfully.<br><small class='text-muted'>{zip_file}</small>", back_plugins)
 
