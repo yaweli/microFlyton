@@ -1,4 +1,4 @@
-import json, random, string, urllib.request, urllib.error
+import json, random, string, urllib.request, urllib.error, zipfile
 from pathlib import Path as _Path
 from pathlib import Path
 from tools.sql import *
@@ -66,6 +66,18 @@ def _wget(url):
         return filename, str(e)
 
 
+def _unzip(zip_path):
+    dest = _Path("/microFlyton")
+    try:
+        if not zipfile.is_zipfile(zip_path):
+            return f"not a valid zip file: {zip_path}"
+        with zipfile.ZipFile(zip_path, 'r') as z:
+            z.extractall(dest)
+        return ""
+    except Exception as e:
+        return str(e)
+
+
 def sys_plugins2(data):
     ses    = data["ses"]
     pcode  = data.get("plugin_code", "").strip()
@@ -113,6 +125,9 @@ def sys_plugins2(data):
         zip_file, err = _wget(plugin_url)
         if err:
             return _result(ses, 0, f"Plugin verified but download failed.<br><small class='text-muted'>{err}</small>", back_catalog)
+        err = _unzip(zip_file)
+        if err:
+            return _result(ses, 0, f"Downloaded but unzip failed.<br><small class='text-muted'>{err}</small>", back_catalog)
 
     return _result(ses, 1, f"Plugin <b>{pname}</b> installed successfully.<br><small class='text-muted'>{zip_file}</small>", back_plugins)
 
