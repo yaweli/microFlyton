@@ -1,4 +1,4 @@
-import json, random, string, subprocess, urllib.request
+import json, random, string, urllib.request, urllib.error
 from pathlib import Path as _Path
 from pathlib import Path
 from tools.sql import *
@@ -54,19 +54,14 @@ def _call_verify(plp):
 def _wget(url):
     filename = "/tmp/" + url.split("/")[-1]
     try:
-        r = subprocess.run(
-            ["wget", "-q", "-O", filename, url],
-            timeout=30, capture_output=True, text=True
-        )
-        if r.returncode != 0:
-            return filename, f"wget exit {r.returncode}: {r.stderr.strip() or 'no detail'}"
+        urllib.request.urlretrieve(url, filename)
         if not _Path(filename).exists() or _Path(filename).stat().st_size == 0:
             return filename, "file empty or missing after download"
         return filename, ""
-    except subprocess.TimeoutExpired:
-        return filename, "download timed out (30s)"
-    except FileNotFoundError:
-        return filename, "wget not found on this system"
+    except urllib.error.HTTPError as e:
+        return filename, f"HTTP {e.code}: {e.reason}"
+    except urllib.error.URLError as e:
+        return filename, f"URL error: {e.reason}"
     except Exception as e:
         return filename, str(e)
 
