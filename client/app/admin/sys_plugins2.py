@@ -104,16 +104,6 @@ def sys_plugins2(data):
 
     plp  = _build_plp(pw, pcode)
 
-    if state != "public":
-        resp = _call_verify(plp)
-        return _result(ses, 0,
-            f"<b>Debug info</b><br>"
-            f"redeem: <code>{redeem}</code><br>"
-            f"pw: <code>{pw}</code><br>"
-            f"plp: <code>{plp}</code><br>"
-            f"server response: <code>{resp}</code>",
-            back_catalog)
-
     resp = _call_verify(plp)
 
     check_code = " Please check your code." if state != "public" else ""
