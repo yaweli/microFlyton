@@ -4,7 +4,9 @@ from pathlib import Path
 from tools.sql import *
 from tools.db_plugins import *
 
-_lib = Path(__file__).resolve().parent.parent.parent / "lib"
+_root = Path(__file__).resolve().parent.parent.parent.parent
+_lib  = _root / "lib"
+_tmp  = _root / "tmp"
 
 
 def _load_catalog():
@@ -52,7 +54,8 @@ def _call_verify(plp):
 
 
 def _wget(url):
-    filename = "/tmp/" + url.split("/")[-1]
+    _tmp.mkdir(parents=True, exist_ok=True)
+    filename = str(_tmp / url.split("/")[-1])
     try:
         urllib.request.urlretrieve(url, filename)
         if not _Path(filename).exists() or _Path(filename).stat().st_size == 0:
@@ -123,7 +126,7 @@ def sys_plugins2(data):
     r = plugin_add(pcode)
     if not r.get("status"):
         err = r.get("err", "Install failed")
-        return _result(ses, 0, f"[step:plugin_add] {err}", back_catalog)
+        return _result(ses, 0, err, back_catalog)
 
     zip_file = ""
     if plugin_url:
@@ -132,10 +135,10 @@ def sys_plugins2(data):
             add_to_data("plugins", w[0], "url", plugin_url)
         zip_file, err = _wget(plugin_url)
         if err:
-            return _result(ses, 0, f"[step:wget] {err}", back_catalog)
+            return _result(ses, 0, f"Download failed: {err}", back_catalog)
         err = _unzip(zip_file)
         if err:
-            return _result(ses, 0, f"[step:unzip] {err}", back_catalog)
+            return _result(ses, 0, f"Unzip failed: {err}", back_catalog)
 
     return _result(ses, 1, f"Plugin <b>{pname}</b> installed successfully.<br><small class='text-muted'>{zip_file}</small>", back_plugins)
 

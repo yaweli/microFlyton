@@ -21,12 +21,12 @@ def users(data):
     if not rows:
         rows = '<tr><td colspan="6" class="text-center text-muted py-4">No users found.</td></tr>'
 
-    h = f"""
+    h = "need to install the plugin .. "
+    horg = f"""
     <div class="col-12 px-4 pt-4">
         <div class="mf-page-title">&#128100; Users</div>
         <div class="card border-0 shadow-sm">
             <div class="table-responsive">
-    Users version : 0.099
                 <table class="table table-hover mb-0">
                     <thead class="table-dark">
                         <tr>
