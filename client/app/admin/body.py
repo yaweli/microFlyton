@@ -18,7 +18,10 @@ def body_admin(data):
     #
     #
     mod = f"{add}{page}"
-    module = importlib.import_module(mod)
+    if mod in sys.modules:
+        module = importlib.reload(sys.modules[mod])
+    else:
+        module = importlib.import_module(mod)
     # locals()["page"]()
     # locals()[function_name]()
     #foo=globals()[page]
