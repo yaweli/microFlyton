@@ -104,17 +104,17 @@ def sys_plugins2(data):
         pw = "eli"
     else:
         if len(redeem) <= 2:
-            return _result(ses, 0, "Invalid redeem code.", back_catalog)
+            return _result(ses, 0, "Invalid redeem code. Please check your code.", back_catalog)
         pw = redeem[2:]
 
     plp  = _build_plp(pw, pcode)
     resp = _call_verify(plp)
 
     if "err" in resp:
-        return _result(ses, 0, str(resp["err"]), back_catalog)
+        return _result(ses, 0, f"{resp['err']} Please check your code.", back_catalog)
 
     if resp.get("pas1") != "OK":
-        return _result(ses, 0, "Verification failed.", back_catalog)
+        return _result(ses, 0, "Verification failed. Please check your code.", back_catalog)
 
     plugin_url = resp.get("url", "")
 

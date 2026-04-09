@@ -171,11 +171,18 @@ if %errorlevel%==0 (
 )
 
 echo.
-echo Pulling latest code...
-git -C "%APP_DIR%" pull --ff-only
+echo Pulling latest code (local changes will be overwritten)...
+git -C "%APP_DIR%" fetch origin
 if errorlevel 1 (
   echo.
-  echo Pull failed.
+  echo Fetch failed.
+  pause
+  goto menu
+)
+git -C "%APP_DIR%" reset --hard @{u}
+if errorlevel 1 (
+  echo.
+  echo Reset failed.
   pause
   goto menu
 )
