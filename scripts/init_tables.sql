@@ -40,6 +40,13 @@ CREATE TABLE IF NOT EXISTS ses (
     PRIMARY KEY (id)
 );
 
+INSERT IGNORE INTO gen SET id=31, key1="pages", val1=0, data='[
+  {"page":"dashboard",   "name":"Dashboard", "roles":[],               "order":1},
+  {"page":"users",       "name":"Users",     "roles":["admin","owner"], "order":2},
+  {"page":"sys_admin",   "name":"Admin",     "roles":["admin","owner"], "order":3},
+  {"page":"sys_plugins", "name":"Plugins",   "roles":["admin","owner"], "order":4}
+]';
+
 CREATE USER IF NOT EXISTS 'fly'@'%' IDENTIFIED BY '1964';
 GRANT ALL PRIVILEGES ON *.* TO 'fly'@'%' WITH GRANT OPTION;
 FLUSH PRIVILEGES;

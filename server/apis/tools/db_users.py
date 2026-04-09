@@ -32,6 +32,20 @@ def is_owner(user_id):
 
 def is_admin(user_id):
     return is_role(user_id,"admin")
+
+
+def is_page_allowed(page, user_id):
+    PAGE_ROLES = {
+        "dashboard":   [],
+        "users":       ["admin","owner"],
+        "sys_admin":   ["admin","owner"],
+        "sys_plugins": ["admin","owner"],
+        "sys_profile": [],
+    }
+    roles = PAGE_ROLES.get(page, ["admin","owner"])
+    if not roles:
+        return 1
+    return any(is_role(user_id, r) for r in roles)
     
 
 def get_user_custs(user_id):
