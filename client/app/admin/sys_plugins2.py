@@ -96,6 +96,7 @@ def sys_plugins2(data):
     back_plugins = f"/cgi-bin/p?ses={ses}&rpage=sys_plugins"
 
     catalog = _load_catalog()
+    print(f"[plugins2] pcode={pcode!r} _lib={_lib} catalog_keys={list(catalog.keys())}")
     entry   = catalog.get(pcode)
     if not entry:
         return _result(ses, 0, "Unknown plugin.", back_catalog)
