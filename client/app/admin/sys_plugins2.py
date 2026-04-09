@@ -67,7 +67,7 @@ def _wget(url):
 
 
 def _unzip(zip_path):
-    dest = _Path("/microFlyton")
+    dest = _Path(__file__).resolve().parent.parent.parent.parent
     try:
         if not zipfile.is_zipfile(zip_path):
             return f"not a valid zip file: {zip_path}"
