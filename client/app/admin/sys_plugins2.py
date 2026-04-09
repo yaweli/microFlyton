@@ -36,9 +36,10 @@ def _encode_password(pw, skip):
 def _build_plp(pw, pcode):
     skip         = random.randint(1, 9)
     total_digits = random.randint(6, 11)
-    middle_count = total_digits - 3
+    middle_count = total_digits - 4
+    prefix       = str(random.randint(0, 9))
     middle       = "".join(str(random.randint(0, 9)) for _ in range(middle_count))
-    num          = f"{len(pw):02d}{middle}{skip}"
+    num          = f"{prefix}{len(pw):02d}{middle}{skip}"
     encoded_pw   = _encode_password(pw, skip)
     return f"{num}/{pcode}/{encoded_pw}"
 
