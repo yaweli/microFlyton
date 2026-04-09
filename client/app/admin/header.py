@@ -2,15 +2,13 @@ from tools.sql import *
 from tools.db_users import *
 
 
-def _nav_item(ses, tab, current_page, user_id):
-    page = tab.get("page", "")
-    name = tab.get("name", "")
+def _nav_item(ses, page, tab, current_page, user_id):
+    name = tab.get("name", page)
 
     if not is_page_allowed(page, user_id):
         return ""
 
-    is_active = (page == current_page)
-    active_cls = "active" if is_active else ""
+    active_cls = "active" if page == current_page else ""
 
     return f'<li class="nav-item"><a class="nav-link {active_cls}" href="/cgi-bin/p?ses={ses}&rpage={page}">{name}</a></li>'
 
@@ -34,9 +32,10 @@ def header(data):
         initials  = "U"
 
     # load pages from gen id=31
-    g     = gen_data()
-    pages = sorted(g.get("pages", {}).get("data", []), key=lambda t: t.get("order", 99))
-    nav_items = "".join(_nav_item(ses, tab, current_page, uid) for tab in pages)
+    g         = gen_data()
+    pages_obj = g.get("pages", {}).get("data", {}) or {}
+    pages     = sorted(pages_obj.items(), key=lambda kv: kv[1].get("order", 99))
+    nav_items = "".join(_nav_item(ses, page, tab, current_page, uid) for page, tab in pages)
 
     is_privileged = is_admin(uid) or is_owner(uid)
 
