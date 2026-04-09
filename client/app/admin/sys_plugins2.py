@@ -71,7 +71,6 @@ def _wget(url):
 
 def _unzip(zip_path):
     try:
-        print(f"[unzip] extracting {zip_path} -> {_root}")
         with zipfile.ZipFile(zip_path, 'r') as z:
             z.extractall(_root)
         return ""
