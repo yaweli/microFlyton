@@ -51,8 +51,28 @@ if not exist "%ENV_FILE%" (
 call :log "  env file OK"
 
 rem ----------------------------------------------------------------
-echo [3/5] Installing MySQL...
-call :log "[3/5] MySQL install"
+echo [3/6] Installing Microsoft VC++ Runtime...
+call :log "[3/6] Installing Microsoft VC++ Runtime"
+
+curl -L -o "%TEMP%\vc_redist.x64.exe" "https://aka.ms/vc14/vc_redist.x64.exe" 2>&1
+if errorlevel 1 (
+  call :log "FAIL: VC++ runtime download failed"
+  echo ERROR: Could not download Microsoft VC++ Runtime.
+  exit /b 1
+)
+
+"%TEMP%\vc_redist.x64.exe" /install /quiet /norestart 2>&1
+if errorlevel 1 (
+  call :log "FAIL: VC++ runtime install failed"
+  echo ERROR: Microsoft VC++ Runtime installation failed.
+  exit /b 1
+)
+
+call :log " VC++ runtime installed OK"
+
+rem ----------------------------------------------------------------
+echo [4/6] Installing MySQL...
+call :log "[4/6] MySQL install"
 
 if exist "%MYSQL_BIN%\mysqld.exe" (
   call :log "  mysqld.exe exists - skipping download"
@@ -194,14 +214,14 @@ if "!READY!"=="0" (
 )
 
 rem ----------------------------------------------------------------
-echo [4/5] Creating required directories...
-call :log "[4/5] creating directories"
+echo [5/6] Creating required directories...
+call :log "[5/6] creating directories"
 if not exist "%APP_DIR%\client\pages\im" mkdir "%APP_DIR%\client\pages\im"
 call :log "  client/pages/im OK"
 
 rem ----------------------------------------------------------------
-echo [5/6] Installing mysql-connector-python...
-call :log "[4/5] pip install mysql-connector-python"
+echo [6/6] Installing mysql-connector-python...
+call :log "[6/6] pip install mysql-connector-python"
 python -m pip install mysql-connector-python 2>&1
 if errorlevel 1 (
   call :log "FAIL: pip install mysql-connector-python failed"
@@ -210,8 +230,8 @@ if errorlevel 1 (
 )
 call :log "  mysql-connector-python OK"
 
-echo [5/6] Initializing database and tables...
-call :log "[4/5] init_tables.sql"
+echo [6/6] Initializing database and tables...
+call :log "[6/6] init_tables.sql"
 "%MYSQL_BIN%\mysql.exe" -u root --protocol=TCP --host=127.0.0.1 < "%SCRIPT_DIR%init_tables.sql" 2>&1
 if errorlevel 1 (
   call :log "FAIL: init_tables.sql failed"

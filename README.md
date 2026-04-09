@@ -16,7 +16,7 @@ microFlyton is a lightweight, self-contained edition of the [Flyton](https://git
 ---
 
 ## First time Install
-Run from Command Prompt:
+Run from Command Prompt *As Adminstrator* :
 
 ```bat
 cd C:\
