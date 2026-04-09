@@ -219,6 +219,21 @@ call :log "[5/6] creating directories"
 if not exist "%APP_DIR%\client\pages\im" mkdir "%APP_DIR%\client\pages\im"
 call :log "  client/pages/im OK"
 
+echo   Creating tools symlink...
+call :log "  creating symlink client/app/tools -> server/apis/tools"
+if exist "%APP_DIR%\client\app\tools" (
+  call :log "  symlink already exists - skipping"
+  echo   Symlink already exists.
+) else (
+  mklink /D "%APP_DIR%\client\app\tools" "%APP_DIR%\server\apis\tools"
+  if errorlevel 1 (
+    call :log "FAIL: mklink failed"
+    echo ERROR: Could not create tools symlink. Make sure you are running as Administrator.
+    exit /b 1
+  )
+  call :log "  symlink OK"
+)
+
 rem ----------------------------------------------------------------
 echo [6/6] Installing mysql-connector-python...
 call :log "[6/6] pip install mysql-connector-python"
