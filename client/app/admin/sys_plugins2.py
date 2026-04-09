@@ -5,7 +5,7 @@ from tools.sql import *
 from tools.db_plugins import *
 
 _root = Path(__file__).resolve().parent.parent.parent.parent
-_lib  = _root / "lib"
+_lib  = _root / "client" / "lib"
 _tmp  = _root / "tmp"
 
 
