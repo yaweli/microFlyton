@@ -27,7 +27,7 @@ if %errorlevel%==0 (
   exit /b 0
 )
 
-start "MicroFlyton Server" cmd /k "cd /d %APP_DIR% && set AUTO_OPEN_BROWSER=0 && python server\server.py"
+start "MicroFlyton Server" cmd /c "cd /d %APP_DIR% && set AUTO_OPEN_BROWSER=0 && python server\server.py"
 timeout /t 2 /nobreak >nul
 start "" "%START_URL%"
 echo MicroFlyton started.
