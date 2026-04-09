@@ -1,4 +1,4 @@
-import json, random, string, traceback, urllib.request, urllib.error, zipfile
+import json, random, string, urllib.request, urllib.error, zipfile
 from pathlib import Path as _Path
 from pathlib import Path
 from tools.sql import *
@@ -87,65 +87,52 @@ def sys_plugins2(data):
     back_catalog = f"/cgi-bin/p?ses={ses}&rpage=sys_plugins1"
     back_plugins = f"/cgi-bin/p?ses={ses}&rpage=sys_plugins"
 
-    try:
-        catalog = _load_catalog()
-        print(f"[plugins2] pcode={pcode!r} _lib={_lib} catalog_keys={list(catalog.keys())}")
-        entry   = catalog.get(pcode)
-        if not entry:
-            return _result(ses, 0, "Unknown plugin.", back_catalog)
+    catalog = _load_catalog()
+    entry   = catalog.get(pcode)
+    if not entry:
+        return _result(ses, 0, "Unknown plugin.", back_catalog)
 
-        pname = entry.get("name", pcode)
-        state = entry.get("state", "public")
+    pname = entry.get("name", pcode)
+    state = entry.get("state", "public")
 
-        if state == "public":
-            pw = "eli"
-        else:
-            if len(redeem) <= 2:
-                return _result(ses, 0, "Invalid redeem code. Please check your code.", back_catalog)
-            pw = redeem[2:]
+    if state == "public":
+        pw = "eli"
+    else:
+        if len(redeem) <= 2:
+            return _result(ses, 0, "Invalid redeem code. Please check your code.", back_catalog)
+        pw = redeem[2:]
 
-        plp  = _build_plp(pw, pcode)
-        print(f"[plugins2] calling verify plp={plp[:20]}...")
-        resp = _call_verify(plp)
-        print(f"[plugins2] verify resp={resp}")
+    plp  = _build_plp(pw, pcode)
+    resp = _call_verify(plp)
 
-        check_code = " Please check your code." if state != "public" else ""
+    check_code = " Please check your code." if state != "public" else ""
 
-        if "err" in resp:
-            return _result(ses, 0, f"{resp['err']}{check_code}", back_catalog)
+    if "err" in resp:
+        return _result(ses, 0, f"{resp['err']}{check_code}", back_catalog)
 
-        if resp.get("pas1") != "OK":
-            return _result(ses, 0, f"Verification failed.{check_code}", back_catalog)
+    if resp.get("pas1") != "OK":
+        return _result(ses, 0, f"Verification failed.{check_code}", back_catalog)
 
-        plugin_url = resp.get("url", "")
-        print(f"[plugins2] plugin_url={plugin_url}")
+    plugin_url = resp.get("url", "")
 
-        r = plugin_add(pcode)
-        print(f"[plugins2] plugin_add result={r}")
-        if not r.get("status"):
-            err = r.get("err", "Install failed")
-            return _result(ses, 0, err, back_catalog)
+    r = plugin_add(pcode)
+    if not r.get("status"):
+        err = r.get("err", "Install failed")
+        return _result(ses, 0, err, back_catalog)
 
-        zip_file = ""
-        if plugin_url:
-            w = find_in_sql({'table': 'plugins', 'fld': 'plugin_code', 'val': pcode, 'what': 'id'})
-            if w:
-                add_to_data("plugins", w[0], "url", plugin_url)
-            zip_file, err = _wget(plugin_url)
-            print(f"[plugins2] wget zip_file={zip_file} err={err!r}")
-            if err:
-                return _result(ses, 0, f"Download failed: {err}", back_catalog)
-            err = _unzip(zip_file)
-            print(f"[plugins2] unzip err={err!r}")
-            if err:
-                return _result(ses, 0, f"Unzip failed: {err}", back_catalog)
+    zip_file = ""
+    if plugin_url:
+        w = find_in_sql({'table': 'plugins', 'fld': 'plugin_code', 'val': pcode, 'what': 'id'})
+        if w:
+            add_to_data("plugins", w[0], "url", plugin_url)
+        zip_file, err = _wget(plugin_url)
+        if err:
+            return _result(ses, 0, f"Download failed: {err}", back_catalog)
+        err = _unzip(zip_file)
+        if err:
+            return _result(ses, 0, f"Unzip failed: {err}", back_catalog)
 
-        return _result(ses, 1, f"Plugin <b>{pname}</b> installed successfully.<br><small class='text-muted'>{zip_file}</small>", back_plugins)
-
-    except Exception as e:
-        tb = traceback.format_exc()
-        print(f"[plugins2 EXCEPTION] {e}\n{tb}")
-        return _result(ses, 0, f"Exception: {e}", back_catalog)
+    return _result(ses, 1, f"Plugin <b>{pname}</b> installed successfully.", back_plugins)
 
 
 def _result(ses, ok, msg, back_url):

@@ -23,6 +23,7 @@ echo r  - run      - Run MicroFlyton service
 echo t  - stop     - Stop the running MicroFlyton service
 echo l  - log      - Tail server log (Ctrl+C to stop)
 echo u  - pull     - Pull latest code from GitHub safely
+echo uu - soft update - Stop server and pull code only (no install)
 echo rg - register - Register MicroFlyton in Windows startup
 echo delete        - Delete and uninstall MicroFlyton code
 echo.
@@ -50,6 +51,9 @@ if /i "!CMD_IN!"=="stop"     goto stop_app
 
 if /i "!CMD_IN!"=="u"        goto pull_app
 if /i "!CMD_IN!"=="pull"     goto pull_app
+
+if /i "!CMD_IN!"=="uu"           goto soft_pull
+if /i "!CMD_IN!"=="soft update"  goto soft_pull
 
 if /i "!CMD_IN!"=="rg"       goto register_app
 if /i "!CMD_IN!"=="register" goto register_app
@@ -199,6 +203,60 @@ if errorlevel 1 (
 
 echo.
 echo Pull completed.
+pause
+goto menu
+
+:soft_pull
+where git >nul 2>nul
+if errorlevel 1 (
+  echo.
+  echo ERROR: git was not found in PATH.
+  echo.
+  pause
+  goto menu
+)
+
+if not exist "%APP_DIR%\.git" (
+  echo.
+  echo ERROR: This folder is not a git working tree.
+  echo.
+  pause
+  goto menu
+)
+
+git -C "%APP_DIR%" ls-files --error-unmatch "server/data/microflyton.db" >nul 2>nul
+if not errorlevel 1 (
+  echo.
+  echo ERROR: server/data/microflyton.db is tracked by git.
+  echo Pull aborted to protect runtime data.
+  echo.
+  pause
+  goto menu
+)
+
+echo.
+echo Stopping server...
+powershell -Command "try { Invoke-WebRequest -Uri 'http://127.0.0.1:%PORT%/stop_it_all' -UseBasicParsing | Out-Null; Write-Host 'Server stopped.' } catch { Write-Host 'Could not reach server (may already be stopped).' }"
+
+echo.
+echo Pulling latest code (local changes will be overwritten)...
+git -C "%APP_DIR%" fetch origin
+if errorlevel 1 (
+  echo.
+  echo Fetch failed.
+  pause
+  goto menu
+)
+git -C "%APP_DIR%" reset --hard @{u}
+if errorlevel 1 (
+  echo.
+  echo Reset failed.
+  pause
+  goto menu
+)
+
+echo.
+echo Soft update completed.
 pause
 goto menu
 
