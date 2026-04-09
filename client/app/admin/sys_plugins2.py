@@ -102,6 +102,15 @@ def sys_plugins2(data):
         pw = redeem[2:]
 
     plp  = _build_plp(pw, pcode)
+
+    if state != "public":
+        return _result(ses, 0,
+            f"<b>Debug info</b><br>"
+            f"redeem: <code>{redeem}</code><br>"
+            f"pw: <code>{pw}</code><br>"
+            f"plp: <code>{plp}</code>",
+            back_catalog)
+
     resp = _call_verify(plp)
 
     check_code = " Please check your code." if state != "public" else ""
