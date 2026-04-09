@@ -133,7 +133,7 @@ def sys_plugins2(data):
         if err:
             return _result(ses, 0, f"Unzip failed: {err}", back_catalog)
 
-    singlerun = _root / "scripts" / "plugins_singlerun.py"
+    singlerun = _root / "client" / "app" / "admin" / "plugins_singlerun.py"
     if singlerun.exists():
         try:
             import importlib.util as _ilu
