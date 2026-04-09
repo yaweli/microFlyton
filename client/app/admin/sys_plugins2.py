@@ -104,7 +104,9 @@ def sys_plugins2(data):
         pw = redeem[2:]
 
     plp  = _build_plp(pw, pcode)
+    print(f"[plugins2] calling verify plp={plp[:20]}...")
     resp = _call_verify(plp)
+    print(f"[plugins2] verify resp={resp}")
 
     check_code = " Please check your code." if state != "public" else ""
 
@@ -115,8 +117,10 @@ def sys_plugins2(data):
         return _result(ses, 0, f"Verification failed.{check_code}", back_catalog)
 
     plugin_url = resp.get("url", "")
+    print(f"[plugins2] plugin_url={plugin_url}")
 
     r = plugin_add(pcode)
+    print(f"[plugins2] plugin_add result={r}")
     if not r.get("status"):
         err = r.get("err", "Install failed")
         return _result(ses, 0, err, back_catalog)
@@ -127,9 +131,11 @@ def sys_plugins2(data):
         if w:
             add_to_data("plugins", w[0], "url", plugin_url)
         zip_file, err = _wget(plugin_url)
+        print(f"[plugins2] wget zip_file={zip_file} err={err!r}")
         if err:
             return _result(ses, 0, f"Download failed: {err}", back_catalog)
         err = _unzip(zip_file)
+        print(f"[plugins2] unzip err={err!r}")
         if err:
             return _result(ses, 0, f"Unzip failed: {err}", back_catalog)
 
