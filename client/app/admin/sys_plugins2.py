@@ -123,7 +123,7 @@ def sys_plugins2(data):
     r = plugin_add(pcode)
     if not r.get("status"):
         err = r.get("err", "Install failed")
-        return _result(ses, 0, err, back_catalog)
+        return _result(ses, 0, f"[step:plugin_add] {err}", back_catalog)
 
     zip_file = ""
     if plugin_url:
@@ -132,10 +132,10 @@ def sys_plugins2(data):
             add_to_data("plugins", w[0], "url", plugin_url)
         zip_file, err = _wget(plugin_url)
         if err:
-            return _result(ses, 0, f"Plugin verified but download failed.<br><small class='text-muted'>{err}</small>", back_catalog)
+            return _result(ses, 0, f"[step:wget] {err}", back_catalog)
         err = _unzip(zip_file)
         if err:
-            return _result(ses, 0, f"Downloaded but unzip failed.<br><small class='text-muted'>{err}</small>", back_catalog)
+            return _result(ses, 0, f"[step:unzip] {err}", back_catalog)
 
     return _result(ses, 1, f"Plugin <b>{pname}</b> installed successfully.<br><small class='text-muted'>{zip_file}</small>", back_plugins)
 
