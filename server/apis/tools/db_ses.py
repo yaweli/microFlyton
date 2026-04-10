@@ -25,6 +25,13 @@ def ses_list(r):
     return all
     
     
+def get_session(ses):
+    w = find_in_sql({'table':'ses','fld':'id','val':ses,'what':'id,user_id,is_active,data'})
+    if type(w) is bool:
+        return None
+    return w
+
+
 def is_ses(ses):
     w=find_in_sql({'table':'ses','fld':'id','val':ses,'what':'id'})
     if type(w) is bool:
