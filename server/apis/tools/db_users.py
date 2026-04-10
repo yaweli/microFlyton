@@ -1,5 +1,8 @@
-# tools/db_user.py
-# Helper functions for users table - Flyton style
+# tools/db_users.py
+# 
+# for microFlyton
+#
+#
 
 import os, sys, json
 sys.path.append(os.path.dirname(__file__))
