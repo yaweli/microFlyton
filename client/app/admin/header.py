@@ -1,5 +1,6 @@
 from tools.sql import *
 from tools.db_users import *
+from tools.kicutil import *
 
 
 def _nav_item(ses, page, tab, current_page, user_id):
