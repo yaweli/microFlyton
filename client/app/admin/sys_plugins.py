@@ -37,7 +37,7 @@ def sys_plugins(data):
                 <div class="mf-plugin-date text-muted small">Installed: {pdate}</div>
                 <div class="mf-plugin-badge mf-badge-active mt-2">Active</div>
                 <a href="{dis_url}" class="mf-plugin-btn-disable btn btn-sm btn-outline-danger mt-3 w-100"
-                   onclick="return confirm('Disable {pcode}?')">Disable</a>
+                   onclick="return confirm('Delete {pcode}?')">Delete</a>
             </div>
         </div>
         """

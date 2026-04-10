@@ -39,7 +39,7 @@ def sys_plugins1(data):
                     &#43; Install
                 </button>
                 <div id="rf_{pcode}" style="display:none" class="mt-3">
-                    <input type="text" id="rc_{pcode}" class="form-control form-control-sm mb-2"
+                    <input type="text" id="rc_{pcode}" class="form-control mb-2"
                            placeholder="Enter Redeem Code"
                            oninput="this.value=this.value.toUpperCase()">
                     <a href="#" onclick="go_install('{pcode}','{ses}')"
