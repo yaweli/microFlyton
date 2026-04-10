@@ -62,8 +62,7 @@ CREATE TABLE IF NOT EXISTS plugins (
 
 
 
-drop table sys_keys;
-create table sys_keys
+CREATE TABLE IF NOT EXISTS sys_keys (
  (
     id int AUTO_INCREMENT PRIMARY KEY,
     keytext text,
