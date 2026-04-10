@@ -38,6 +38,9 @@ def header(data):
     pages     = sorted(pages_obj.items(), key=lambda kv: kv[1].get("order", 99))
     nav_items = "".join(_nav_item(ses, page, tab, current_page, uid) for page, tab in pages)
 
+    project_name = g.get("name", {}).get("val", "")
+    project_html = f'<span class="text-white-50 me-2" style="font-size:13px;">{project_name}</span>' if project_name else ""
+
     is_privileged = is_admin(uid) or is_owner(uid)
 
     settings_item = f'<li><a class="dropdown-item" href="/cgi-bin/p?ses={ses}&rpage=sys_admin">&#9881;&#65039;&nbsp; Admin</a></li>' if is_privileged else ""
@@ -57,6 +60,7 @@ def header(data):
                 {nav_items}
             </ul>
             <div class="d-flex align-items-center gap-3">
+                {project_html}
                 <div class="dropdown">
                     <div class="mf-avatar" data-bs-toggle="dropdown" aria-expanded="false" title="{display}">
                         {initials}
