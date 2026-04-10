@@ -60,9 +60,7 @@ CREATE TABLE IF NOT EXISTS plugins (
 );
 
 
-
-
-CREATE TABLE IF NOT EXISTS sys_keys (
+create table sys_keys
  (
     id int AUTO_INCREMENT PRIMARY KEY,
     keytext text,
@@ -71,6 +69,5 @@ CREATE TABLE IF NOT EXISTS sys_keys (
     update_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     data json DEFAULT NULL
 );
-
 
 

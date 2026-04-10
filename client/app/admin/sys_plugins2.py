@@ -134,16 +134,20 @@ def sys_plugins2(data):
             return _result(ses, 0, f"Unzip failed: {err}", back_catalog)
 
     singlerun = _root / "client" / "app" / "admin" / "plugins_singlerun.py"
+    print(f"[singlerun] checking {singlerun} exists={singlerun.exists()}")
     if singlerun.exists():
         try:
             import importlib.util as _ilu
             spec = _ilu.spec_from_file_location("plugins_singlerun", singlerun)
             mod  = _ilu.module_from_spec(spec)
             spec.loader.exec_module(mod)
+            print("[singlerun] calling run()...")
             mod.run()
+            print("[singlerun] run() completed OK")
         except Exception as e:
-            pass
+            print(f"[singlerun] ERROR: {e}")
         singlerun.unlink(missing_ok=True)
+        print("[singlerun] file deleted")
 
     return _result(ses, 1, f"Plugin <b>{pname}</b> installed successfully.", back_plugins)
 
