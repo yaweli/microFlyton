@@ -43,6 +43,7 @@ def header(data):
     plugins_item  = f'<li><a class="dropdown-item" href="/cgi-bin/p?ses={ses}&rpage=sys_plugins">&#129070;&nbsp; Plugins</a></li>' if is_privileged else ""
 
     print(f"""
+     {kicbutton0()} 
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3">
         <a class="navbar-brand fw-bold" href="/cgi-bin/p?ses={ses}&rpage=dashboard">
             &#9670; MicroFlyton
