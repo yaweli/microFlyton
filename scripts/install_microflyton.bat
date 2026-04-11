@@ -29,8 +29,8 @@ call :log "MYSQL_DIR= %MYSQL_DIR%"
 call :log "=============================="
 
 rem ----------------------------------------------------------------
-echo [1/5] Checking Python...
-call :log "[1/5] Checking Python"
+echo [1/7] Checking Python...
+call :log "[1/7] Checking Python"
 where python >nul 2>nul
 if errorlevel 1 (
   call :log "FAIL: python not found in PATH"
@@ -41,8 +41,8 @@ if errorlevel 1 (
 for /f "tokens=*" %%V in ('python --version 2^>^&1') do call :log "  python = %%V"
 
 rem ----------------------------------------------------------------
-echo [2/5] Validating environment file...
-call :log "[2/5] Validating env file: %ENV_FILE%"
+echo [2/7] Validating environment file...
+call :log "[2/7] Validating env file: %ENV_FILE%"
 if not exist "%ENV_FILE%" (
   call :log "FAIL: env file not found"
   echo ERROR: %ENV_FILE% was not found.
@@ -51,8 +51,8 @@ if not exist "%ENV_FILE%" (
 call :log "  env file OK"
 
 rem ----------------------------------------------------------------
-echo [3/6] Installing Microsoft VC++ Runtime...
-call :log "[3/6] Installing Microsoft VC++ Runtime"
+echo [3/7] Installing Microsoft VC++ Runtime...
+call :log "[3/7] Installing Microsoft VC++ Runtime"
 
 curl -L -o "%TEMP%\vc_redist.x64.exe" "https://aka.ms/vc14/vc_redist.x64.exe" 2>&1
 if errorlevel 1 (
@@ -71,8 +71,8 @@ if errorlevel 1 (
 call :log " VC++ runtime installed OK"
 
 rem ----------------------------------------------------------------
-echo [4/6] Installing MySQL...
-call :log "[4/6] MySQL install"
+echo [4/7] Installing MySQL...
+call :log "[4/7] MySQL install"
 
 if exist "%MYSQL_BIN%\mysqld.exe" (
   call :log "  mysqld.exe exists - skipping download"
@@ -214,8 +214,8 @@ if "!READY!"=="0" (
 )
 
 rem ----------------------------------------------------------------
-echo [5/6] Creating required directories...
-call :log "[5/6] creating directories"
+echo [5/7] Creating required directories...
+call :log "[5/7] creating directories"
 if not exist "%APP_DIR%\client\pages\im" mkdir "%APP_DIR%\client\pages\im"
 call :log "  client/pages/im OK"
 
@@ -235,8 +235,8 @@ if exist "%APP_DIR%\client\app\tools" (
 )
 
 rem ----------------------------------------------------------------
-echo [6/6] Installing mysql-connector-python...
-call :log "[6/6] pip install mysql-connector-python"
+echo [6/7] Installing mysql-connector-python...
+call :log "[6/7] pip install mysql-connector-python"
 python -m pip install mysql-connector-python 2>&1
 if errorlevel 1 (
   call :log "FAIL: pip install mysql-connector-python failed"
@@ -245,8 +245,18 @@ if errorlevel 1 (
 )
 call :log "  mysql-connector-python OK"
 
-echo [6/6] Initializing database and tables...
-call :log "[6/6] init_tables.sql"
+echo [7/7] Installing requests...
+call :log "[7/7] pip install requests"
+python -m pip install requests 2>&1
+if errorlevel 1 (
+  call :log "FAIL: pip install requests failed"
+  echo ERROR: Could not install requests.
+  exit /b 1
+)
+call :log "  requests OK"
+
+echo [6/7] Initializing database and tables...
+call :log "[6/7] init_tables.sql"
 "%MYSQL_BIN%\mysql.exe" -u root --protocol=TCP --host=127.0.0.1 < "%SCRIPT_DIR%init_tables.sql" 2>&1
 if errorlevel 1 (
   call :log "FAIL: init_tables.sql failed"
@@ -256,7 +266,7 @@ if errorlevel 1 (
 call :log "  tables OK"
 
 rem ----------------------------------------------------------------
-echo [6/6] Updating .env.micro for MySQL...
+echo [6/7] Updating .env.micro for MySQL...
 call :log "[5/5] updating .env.micro"
 python -c "
 import sys
