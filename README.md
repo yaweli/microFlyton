@@ -20,8 +20,9 @@ Run from Command Prompt *As Adminstrator* :
 
 ```bat
 cd C:\
-Get-AppxPackage Microsoft.DesktopAppInstaller | Remove-AppxPackage
-winget upgrade --id Microsoft.AppInstaller
+winget source remove winget
+winget source add --name winget https://cdn.winget.microsoft.com/cache/source.msix
+winget source update
 winget install --id Git.Git -e --source winget
 git clone https://github.com/yaweli/microFlyton.git
 cd C:\microflyton\scripts

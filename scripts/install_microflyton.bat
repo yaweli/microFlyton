@@ -348,39 +348,39 @@ set "TMP_PY=%TEMP%\microflyton_update_env_%RANDOM%_%RANDOM%.py"
 > "%TMP_PY%" (
   echo import sys
   echo from pathlib import Path
-  echo env_file = Path(sys.argv[1])
-  echo text = env_file.read_text(encoding="utf-8") if env_file.exists() else ""
-  echo lines = text.splitlines(True)
+  echo env_file = Path^(sys.argv[1]^)
+  echo text = env_file.read_text^(encoding="utf-8"^) if env_file.exists^(^) else ""
+  echo lines = text.splitlines^(True^)
   echo set_keys = {
-  echo ^    "DB_BACKEND": "mysql",
-  echo ^    "hostname": "127.0.0.1",
-  echo ^    "username": "fly",
-  echo ^    "password": "1964",
-  echo ^    "database": "fly",
-  echo ^    "is_mic": "0",
+  echo     "DB_BACKEND": "mysql",
+  echo     "hostname": "127.0.0.1",
+  echo     "username": "fly",
+  echo     "password": "1964",
+  echo     "database": "fly",
+  echo     "is_mic": "0",
   echo }
   echo remove_keys = {"DB_PATH"}
   echo result = []
-  echo seen = set()
+  echo seen = set^(^)
   echo for line in lines:
-  echo ^    s = line.strip()
-  echo ^    if not s or s.startswith("#") or "=" not in s:
-  echo ^        result.append(line)
-  echo ^        continue
-  echo ^    k, v = s.split("=", 1)
-  echo ^    k = k.strip()
-  echo ^    if k in remove_keys:
-  echo ^        continue
-  echo ^    if k in set_keys:
-  echo ^        result.append(f"{k}={set_keys[k]}\n")
-  echo ^        seen.add(k)
-  echo ^    else:
-  echo ^        result.append(line)
-  echo for k, v in set_keys.items():
-  echo ^    if k not in seen:
-  echo ^        result.append(f"{k}={v}\n")
-  echo env_file.write_text("".join(result), encoding="utf-8")
-  echo print("env updated")
+  echo     s = line.strip^(^)
+  echo     if not s or s.startswith^("#"^) or "=" not in s:
+  echo         result.append^(line^)
+  echo         continue
+  echo     k, v = s.split^("="^, 1^)
+  echo     k = k.strip^(^)
+  echo     if k in remove_keys:
+  echo         continue
+  echo     if k in set_keys:
+  echo         result.append^(f"{k}={set_keys[k]}\n"^)
+  echo         seen.add^(k^)
+  echo     else:
+  echo         result.append^(line^)
+  echo for k, v in set_keys.items^(^):
+  echo     if k not in seen:
+  echo         result.append^(f"{k}={v}\n"^)
+  echo env_file.write_text^("".join^(result^), encoding="utf-8"^)
+  echo print^("env updated"^)
 )
 
 %PY_CMD% "%TMP_PY%" "%ENV_FILE%"
