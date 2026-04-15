@@ -20,6 +20,7 @@ Run from Command Prompt *As Adminstrator* :
 
 ```bat
 cd C:\
+winget upgrade --id Microsoft.AppInstaller
 winget install --id Git.Git -e --source winget
 git clone https://github.com/yaweli/microFlyton.git
 cd C:\microflyton\scripts
