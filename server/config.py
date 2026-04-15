@@ -7,7 +7,7 @@ sys_root = "fly" # inside docker the name is "fly"
 sys_url  = "127.0.0.1"
 
 # mysql codes
-hostname="localhost"
+hostname="127.0.0.1"
 username = "fly"
 password = "1964"
 database = "fly"
