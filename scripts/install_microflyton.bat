@@ -343,7 +343,18 @@ if not exist "%SCRIPT_DIR%init_tables.sql" (
   exit /b 1
 )
 
-"%MYSQL_BIN%\mysql.exe" -u root --protocol=TCP --host=127.0.0.1 < "%SCRIPT_DIR%init_tables.sql" >> "%LOG_FILE%" 2>&1
+call :log "Recreating database fly"
+(
+  echo DROP DATABASE IF EXISTS fly;
+  echo CREATE DATABASE fly CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) | "%MYSQL_BIN%\mysql.exe" -u root --protocol=TCP --host=127.0.0.1 >> "%LOG_FILE%" 2>&1
+if errorlevel 1 (
+  call :log "Database drop/create failed"
+  exit /b 1
+)
+
+call :log "Running init_tables.sql into database fly"
+"%MYSQL_BIN%\mysql.exe" -u root --protocol=TCP --host=127.0.0.1 fly < "%SCRIPT_DIR%init_tables.sql" >> "%LOG_FILE%" 2>&1
 if errorlevel 1 (
   call :log "init_tables.sql execution failed"
   exit /b 1
