@@ -4,324 +4,412 @@ setlocal EnableExtensions EnableDelayedExpansion
 net session >nul 2>nul
 if errorlevel 1 (
   echo ERROR: This script must be run as Administrator.
-  echo Right-click the script and select "Run as administrator".
+  echo Right-click the script and choose "Run as administrator".
   pause
   exit /b 1
 )
 
 set "SCRIPT_DIR=%~dp0"
 for %%I in ("%SCRIPT_DIR%..") do set "APP_DIR=%%~fI"
-set "ENV_FILE=%APP_DIR%\.env.micro"
-set "TMP_ENV=%TEMP%\microflyton_env_%RANDOM%_%RANDOM%.tmp"
-set "LOG_FILE=%APP_DIR%\install.log"
 
+set "ENV_FILE=%APP_DIR%\.env.micro"
+set "LOG_FILE=%APP_DIR%\install.log"
 set "MYSQL_VERSION=8.0.36"
 set "MYSQL_DIR=C:\mysql_lite"
 set "MYSQL_BIN=%MYSQL_DIR%\bin"
 set "MYSQL_URL=https://dev.mysql.com/get/Downloads/MySQL-8.0/mysql-%MYSQL_VERSION%-winx64.zip"
+set "VC_URL=https://aka.ms/vc14/vc_redist.x64.exe"
 
-echo. > "%LOG_FILE%"
-call :log "=============================="
-call :log "MicroFlyton Install - %DATE% %TIME%"
-call :log "APP_DIR  = %APP_DIR%"
-call :log "ENV_FILE = %ENV_FILE%"
-call :log "MYSQL_DIR= %MYSQL_DIR%"
-call :log "=============================="
+set "PY_CMD="
+set "PIP_CMD="
 
-rem ----------------------------------------------------------------
-echo [1/7] Checking Python...
-call :log "[1/7] Checking Python"
-where python >nul 2>nul
-if errorlevel 1 (
-  call :log "FAIL: python not found in PATH"
-  echo ERROR: python was not found in PATH.
-  echo Install Python 3.11+ and rerun this script.
-  exit /b 1
+> "%LOG_FILE%" (
+  echo ==============================
+  echo MicroFlyton Install - %DATE% %TIME%
+  echo APP_DIR  = %APP_DIR%
+  echo ENV_FILE = %ENV_FILE%
+  echo MYSQL_DIR= %MYSQL_DIR%
+  echo ==============================
 )
-for /f "tokens=*" %%V in ('python --version 2^>^&1') do call :log "  python = %%V"
 
-rem ----------------------------------------------------------------
-echo [2/7] Validating environment file...
-call :log "[2/7] Validating env file: %ENV_FILE%"
+call :step "[1/9] Validating environment file..."
 if not exist "%ENV_FILE%" (
-  call :log "FAIL: env file not found"
-  echo ERROR: %ENV_FILE% was not found.
-  exit /b 1
+  call :fail "Environment file not found: %ENV_FILE%"
 )
-call :log "  env file OK"
+call :log "Environment file exists"
 
-rem ----------------------------------------------------------------
-echo [3/7] Installing Microsoft VC++ Runtime...
-call :log "[3/7] Installing Microsoft VC++ Runtime"
-
-curl -L -o "%TEMP%\vc_redist.x64.exe" "https://aka.ms/vc14/vc_redist.x64.exe" 2>&1
+call :step "[2/9] Resolving Python..."
+call :resolve_python
 if errorlevel 1 (
-  call :log "FAIL: VC++ runtime download failed"
-  echo ERROR: Could not download Microsoft VC++ Runtime.
-  exit /b 1
-)
-
-"%TEMP%\vc_redist.x64.exe" /install /quiet /norestart 2>&1
-if errorlevel 1 (
-  call :log "FAIL: VC++ runtime install failed"
-  echo ERROR: Microsoft VC++ Runtime installation failed.
-  exit /b 1
-)
-
-call :log " VC++ runtime installed OK"
-
-rem ----------------------------------------------------------------
-echo [4/7] Installing MySQL...
-call :log "[4/7] MySQL install"
-
-if exist "%MYSQL_BIN%\mysqld.exe" (
-  call :log "  mysqld.exe exists - skipping download"
-  echo   MySQL binaries already at %MYSQL_DIR%
-  goto mysql_service
-)
-
-call :log "  mysqld.exe not found - downloading"
-if not exist "%MYSQL_DIR%" mkdir "%MYSQL_DIR%"
-cd /d "%MYSQL_DIR%"
-
-echo   Downloading MySQL v%MYSQL_VERSION%...
-call :log "  curl -> %MYSQL_URL%"
-curl -L -o mysql.zip "%MYSQL_URL%" 2>&1
-if errorlevel 1 (
-  call :log "FAIL: curl download failed"
-  echo ERROR: Download failed. Check internet connection.
-  exit /b 1
-)
-call :log "  download OK"
-
-echo   Extracting...
-tar -xf mysql.zip --strip-components=1
-if errorlevel 1 (
-  call :log "FAIL: tar extract failed"
-  echo ERROR: Extract failed.
-  exit /b 1
-)
-del mysql.zip
-call :log "  extract OK"
-
-echo   Creating my.ini...
-(
-  echo [mysqld]
-  echo basedir=%MYSQL_DIR:\=/%
-  echo datadir=%MYSQL_DIR:\=/%/data
-  echo port=3306
-  echo innodb_buffer_pool_size=128M
-  echo max_connections=10
-) > "%MYSQL_DIR%\my.ini"
-call :log "  my.ini written"
-
-echo   Clearing old data directory for fresh initialize...
-call :log "  removing old data dir"
-if exist "%MYSQL_DIR%\data" rmdir /s /q "%MYSQL_DIR%\data"
-
-echo   Initializing data directory...
-call :log "  running mysqld --initialize-insecure"
-"%MYSQL_BIN%\mysqld.exe" --defaults-file="%MYSQL_DIR%\my.ini" --initialize-insecure --console 2>&1
-if errorlevel 1 (
-  call :log "FAIL: initialize-insecure failed"
-  echo ERROR: MySQL initialization failed.
-  exit /b 1
-)
-call :log "  initialize OK"
-
-echo   Registering Windows service...
-call :log "  cleaning up any old service registration"
-net stop MySQL_Lite >nul 2>nul
-"%MYSQL_BIN%\mysqld.exe" --remove MySQL_Lite >nul 2>nul
-sc delete MySQL_Lite >nul 2>nul
-timeout /t 2 /nobreak >nul
-
-call :log "  mysqld --install MySQL_Lite"
-"%MYSQL_BIN%\mysqld.exe" --defaults-file="%MYSQL_DIR%\my.ini" --install MySQL_Lite 2>&1
-if errorlevel 1 (
-  call :log "FAIL: service install failed"
-  echo ERROR: MySQL service registration failed.
-  echo   Trying sc create as fallback...
-  sc create MySQL_Lite binPath= "\"%MYSQL_BIN%\mysqld.exe\" --defaults-file=\"%MYSQL_DIR%\my.ini\" MySQL_Lite" start= auto DisplayName= "MySQL Lite" 2>&1
+  call :step "[2/9] Python not usable - installing Python 3.11..."
+  call :install_python
   if errorlevel 1 (
-    call :log "FAIL: sc create also failed"
-    echo ERROR: Could not register MySQL service.
-    exit /b 1
+    call :fail "Python installation failed"
   )
-)
-call :log "  service registered OK"
-goto mysql_start
-
-:mysql_service
-echo   Checking service registration...
-call :log "  sc query MySQL_Lite"
-sc query MySQL_Lite >nul 2>nul
-if not errorlevel 1 (
-  call :log "  service already registered"
-  echo   Service already registered.
-  goto mysql_start
-)
-
-call :log "  service not registered - registering"
-echo   Service not registered. Registering...
-"%MYSQL_BIN%\mysqld.exe" --defaults-file="%MYSQL_DIR%\my.ini" --install MySQL_Lite 2>&1
-if errorlevel 1 (
-  call :log "FAIL: service install failed"
-  echo ERROR: MySQL service registration failed.
-  exit /b 1
-)
-call :log "  service registered OK"
-
-:mysql_start
-echo   Starting MySQL service...
-call :log "  net start MySQL_Lite"
-net start MySQL_Lite 2>&1
-call :log "  net start errorlevel=%errorlevel%"
-
-echo   Waiting for MySQL to be ready...
-call :log "  waiting for TCP connection on 127.0.0.1:3306"
-set "READY=0"
-for /l %%i in (1,1,15) do (
-  if "!READY!"=="0" (
-    "%MYSQL_BIN%\mysql.exe" -u root --protocol=TCP --host=127.0.0.1 --connect-timeout=2 --execute="SELECT 1;" >nul 2>nul
-    if not errorlevel 1 (
-      set "READY=1"
-      call :log "  MySQL ready on attempt %%i"
-    )
-    if "!READY!"=="0" (
-      echo   attempt %%i/15...
-      call :log "  attempt %%i/15 - not ready"
-      timeout /t 2 /nobreak >nul
-    )
-  )
-)
-if "!READY!"=="0" (
-  call :log "FAIL: MySQL not ready after 30s"
-  echo.
-  echo ERROR: MySQL did not respond after 30 seconds.
-  echo.
-  echo --- Service state ---
-  sc query MySQL_Lite
-  echo.
-  echo --- MySQL error log ---
-  for %%F in ("%MYSQL_DIR%\data\*.err") do (
-    echo Log: %%F
-    type "%%F"
-  )
-  echo.
-  echo Full install log: %LOG_FILE%
-  exit /b 1
-)
-
-rem ----------------------------------------------------------------
-echo [5/7] Creating required directories...
-call :log "[5/7] creating directories"
-if not exist "%APP_DIR%\client\pages\im" mkdir "%APP_DIR%\client\pages\im"
-call :log "  client/pages/im OK"
-
-echo   Creating tools symlink...
-call :log "  creating symlink client/app/tools -> server/apis/tools"
-if exist "%APP_DIR%\client\app\tools" (
-  call :log "  symlink already exists - skipping"
-  echo   Symlink already exists.
-) else (
-  mklink /D "%APP_DIR%\client\app\tools" "%APP_DIR%\server\apis\tools"
+  call :resolve_python
   if errorlevel 1 (
-    call :log "FAIL: mklink failed"
-    echo ERROR: Could not create tools symlink. Make sure you are running as Administrator.
-    exit /b 1
+    call :fail "Python still not usable after install. Disable Microsoft Store python aliases if needed."
   )
-  call :log "  symlink OK"
 )
 
-rem ----------------------------------------------------------------
-echo [6/7] Installing mysql-connector-python...
-call :log "[6/7] pip install mysql-connector-python"
-python -m pip install mysql-connector-python 2>&1
+call :step "[3/9] Ensuring pip is ready..."
+call :ensure_pip
 if errorlevel 1 (
-  call :log "FAIL: pip install mysql-connector-python failed"
-  echo ERROR: Could not install mysql-connector-python.
-  exit /b 1
+  call :fail "pip is not available"
 )
-call :log "  mysql-connector-python OK"
 
-echo [7/7] Installing requests...
-call :log "[7/7] pip install requests"
-python -m pip install requests 2>&1
+call :step "[4/9] Installing Python packages..."
+call :install_python_packages
 if errorlevel 1 (
-  call :log "FAIL: pip install requests failed"
-  echo ERROR: Could not install requests.
-  exit /b 1
+  call :fail "Could not install required Python packages"
 )
-call :log "  requests OK"
 
-echo [6/7] Initializing database and tables...
-call :log "[6/7] init_tables.sql"
-"%MYSQL_BIN%\mysql.exe" -u root --protocol=TCP --host=127.0.0.1 < "%SCRIPT_DIR%init_tables.sql" 2>&1
+call :step "[5/9] Installing Microsoft VC++ Runtime..."
+call :install_vc_runtime
 if errorlevel 1 (
-  call :log "FAIL: init_tables.sql failed"
-  echo ERROR: Database initialization failed.
-  exit /b 1
+  call :fail "Could not install Microsoft VC++ Runtime"
 )
-call :log "  tables OK"
 
-rem ----------------------------------------------------------------
-echo [6/7] Updating .env.micro for MySQL...
-call :log "[5/5] updating .env.micro"
-python -c "
-import sys
-env_file = sys.argv[1]
-lines = open(env_file, encoding='utf-8').readlines()
-set_keys = {'DB_BACKEND':'mysql','hostname':'127.0.0.1','username':'fly','password':'1964','database':'fly','is_mic':'0'}
-remove_keys = {'DB_PATH'}
-result = []
-seen = set()
-for line in lines:
-    s = line.strip()
-    if not s or s.startswith('#') or '=' not in s:
-        result.append(line)
-        continue
-    k = s.split('=',1)[0].strip()
-    if k in remove_keys:
-        continue
-    if k in set_keys:
-        result.append(f'{k}={set_keys[k]}\n')
-        seen.add(k)
-    else:
-        result.append(line)
-for k,v in set_keys.items():
-    if k not in seen:
-        result.append(f'{k}={v}\n')
-open(env_file,'w',encoding='utf-8').writelines(result)
-print('env updated')
-" "%ENV_FILE%"
+call :step "[6/9] Installing / starting MySQL..."
+call :install_mysql
 if errorlevel 1 (
-  call :log "FAIL: .env.micro update failed"
-  echo WARNING: Could not update .env.micro
-  exit /b 1
+  call :fail "MySQL installation/startup failed"
 )
-call :log "  .env.micro updated"
+
+call :step "[7/9] Creating required directories and symlink..."
+call :prepare_directories
+if errorlevel 1 (
+  call :fail "Could not prepare folders or symlink"
+)
+
+call :step "[8/9] Initializing database and tables..."
+call :init_database
+if errorlevel 1 (
+  call :fail "Database initialization failed"
+)
+
+call :step "[9/9] Updating .env.micro for MySQL..."
+call :update_env_file
+if errorlevel 1 (
+  call :fail "Failed to update .env.micro"
+)
 
 where git >nul 2>nul
 if not errorlevel 1 (
   git -C "%APP_DIR%" rev-parse --is-inside-work-tree >nul 2>nul
   if not errorlevel 1 (
     git -C "%APP_DIR%" update-index --skip-worktree ".env.micro" >nul 2>nul
+    call :log "Marked .env.micro as skip-worktree"
   )
 )
 
 call :log "=============================="
 call :log "Installation completed OK"
 call :log "=============================="
+
 echo.
-echo Installation completed.
+echo Installation completed successfully.
+echo.
 echo Code path : %APP_DIR%
 echo MySQL     : %MYSQL_DIR%
-echo Database  : fly  /  user: fly  /  password: 1964
+echo Python    : %PY_CMD%
+echo Database  : fly
+echo User      : fly
+echo Password  : 1964
 echo Log       : %LOG_FILE%
+echo.
 exit /b 0
 
-rem ----------------------------------------------------------------
+:resolve_python
+set "PY_CMD="
+set "PIP_CMD="
+
+python --version >nul 2>nul
+if not errorlevel 1 (
+  set "PY_CMD=python"
+  set "PIP_CMD=python -m pip"
+  for /f "tokens=*" %%V in ('python --version 2^>^&1') do call :log "Using python: %%V"
+  exit /b 0
+)
+
+py -3.11 --version >nul 2>nul
+if not errorlevel 1 (
+  set "PY_CMD=py -3.11"
+  set "PIP_CMD=py -3.11 -m pip"
+  for /f "tokens=*" %%V in ('py -3.11 --version 2^>^&1') do call :log "Using python: %%V"
+  exit /b 0
+)
+
+py -3 --version >nul 2>nul
+if not errorlevel 1 (
+  set "PY_CMD=py -3"
+  set "PIP_CMD=py -3 -m pip"
+  for /f "tokens=*" %%V in ('py -3 --version 2^>^&1') do call :log "Using python: %%V"
+  exit /b 0
+)
+
+call :log "No usable Python found"
+exit /b 1
+
+:install_python
+call :log "Attempting Python install via winget"
+
+where winget >nul 2>nul
+if errorlevel 1 (
+  call :log "winget not found"
+  echo ERROR: winget was not found on this machine.
+  echo Install Python 3.11 manually, then rerun this script.
+  exit /b 1
+)
+
+winget install --id Python.Python.3.11 -e --source winget --accept-package-agreements --accept-source-agreements
+if errorlevel 1 (
+  call :log "winget install Python failed"
+  exit /b 1
+)
+
+call :log "Python installed via winget"
+exit /b 0
+
+:ensure_pip
+%PY_CMD% -m ensurepip --upgrade >nul 2>nul
+%PY_CMD% -m pip --version >nul 2>nul
+if errorlevel 1 (
+  call :log "pip still unavailable after ensurepip"
+  exit /b 1
+)
+
+%PY_CMD% -m pip install --upgrade pip
+if errorlevel 1 (
+  call :log "pip upgrade failed"
+  exit /b 1
+)
+
+for /f "tokens=*" %%V in ('%PY_CMD% -m pip --version 2^>^&1') do call :log "Using pip: %%V"
+exit /b 0
+
+:install_python_packages
+%PY_CMD% -m pip install mysql-connector-python requests
+if errorlevel 1 (
+  call :log "pip install mysql-connector-python requests failed"
+  exit /b 1
+)
+call :log "Python packages installed: mysql-connector-python, requests"
+exit /b 0
+
+:install_vc_runtime
+curl -L -o "%TEMP%\vc_redist.x64.exe" "%VC_URL%"
+if errorlevel 1 (
+  call :log "VC++ runtime download failed"
+  exit /b 1
+)
+
+"%TEMP%\vc_redist.x64.exe" /install /quiet /norestart
+if errorlevel 1 (
+  call :log "VC++ runtime install returned error"
+  exit /b 1
+)
+
+call :log "VC++ runtime installed"
+exit /b 0
+
+:install_mysql
+if exist "%MYSQL_BIN%\mysqld.exe" (
+  call :log "MySQL binaries already exist at %MYSQL_DIR%"
+  goto mysql_service_check
+)
+
+if not exist "%MYSQL_DIR%" mkdir "%MYSQL_DIR%"
+cd /d "%MYSQL_DIR%"
+
+call :log "Downloading MySQL from %MYSQL_URL%"
+curl -L -o mysql.zip "%MYSQL_URL%"
+if errorlevel 1 (
+  call :log "MySQL download failed"
+  exit /b 1
+)
+
+tar -xf mysql.zip --strip-components=1
+if errorlevel 1 (
+  call :log "MySQL extraction failed"
+  exit /b 1
+)
+del /f /q mysql.zip >nul 2>nul
+
+(
+  echo [mysqld]
+  echo basedir=%MYSQL_DIR:\=/%
+  echo datadir=%MYSQL_DIR:\=/%/data
+  echo port=3306
+  echo innodb_buffer_pool_size=128M
+  echo max_connections=25
+  echo default_authentication_plugin=mysql_native_password
+) > "%MYSQL_DIR%\my.ini"
+
+call :log "my.ini created"
+
+if exist "%MYSQL_DIR%\data" (
+  call :log "Removing old MySQL data directory"
+  rmdir /s /q "%MYSQL_DIR%\data"
+)
+
+call :log "Initializing MySQL data directory"
+"%MYSQL_BIN%\mysqld.exe" --defaults-file="%MYSQL_DIR%\my.ini" --initialize-insecure --console
+if errorlevel 1 (
+  call :log "mysqld --initialize-insecure failed"
+  exit /b 1
+)
+
+:mysql_service_check
+sc query MySQL_Lite >nul 2>nul
+if errorlevel 1 (
+  call :log "Registering MySQL_Lite service"
+  net stop MySQL_Lite >nul 2>nul
+  "%MYSQL_BIN%\mysqld.exe" --remove MySQL_Lite >nul 2>nul
+  sc delete MySQL_Lite >nul 2>nul
+  timeout /t 2 /nobreak >nul
+
+  "%MYSQL_BIN%\mysqld.exe" --defaults-file="%MYSQL_DIR%\my.ini" --install MySQL_Lite
+  if errorlevel 1 (
+    call :log "mysqld --install failed, trying sc create fallback"
+    sc create MySQL_Lite binPath= "\"%MYSQL_BIN%\mysqld.exe\" --defaults-file=\"%MYSQL_DIR%\my.ini\" MySQL_Lite" start= auto DisplayName= "MySQL Lite"
+    if errorlevel 1 (
+      call :log "MySQL service registration failed"
+      exit /b 1
+    )
+  )
+)
+
+call :log "Starting MySQL_Lite service"
+net start MySQL_Lite >nul 2>nul
+
+set "READY=0"
+for /l %%i in (1,1,20) do (
+  if "!READY!"=="0" (
+    "%MYSQL_BIN%\mysql.exe" -u root --protocol=TCP --host=127.0.0.1 --connect-timeout=2 --execute="SELECT 1;" >nul 2>nul
+    if not errorlevel 1 (
+      set "READY=1"
+      call :log "MySQL became ready on attempt %%i"
+    ) else (
+      timeout /t 2 /nobreak >nul
+    )
+  )
+)
+
+if "!READY!"=="0" (
+  call :log "MySQL did not become ready in time"
+  sc query MySQL_Lite >> "%LOG_FILE%" 2>&1
+  for %%F in ("%MYSQL_DIR%\data\*.err") do (
+    echo ----- %%F ----- >> "%LOG_FILE%"
+    type "%%F" >> "%LOG_FILE%"
+  )
+  exit /b 1
+)
+
+call :log "MySQL is ready"
+exit /b 0
+
+:prepare_directories
+if not exist "%APP_DIR%\client\pages\im" mkdir "%APP_DIR%\client\pages\im"
+if not exist "%APP_DIR%\client\app" mkdir "%APP_DIR%\client\app"
+
+if exist "%APP_DIR%\client\app\tools" (
+  call :log "Symlink or folder already exists: client\app\tools"
+  exit /b 0
+)
+
+mklink /D "%APP_DIR%\client\app\tools" "%APP_DIR%\server\apis\tools"
+if errorlevel 1 (
+  call :log "mklink failed"
+  exit /b 1
+)
+
+call :log "Directories and symlink prepared"
+exit /b 0
+
+:init_database
+if not exist "%SCRIPT_DIR%init_tables.sql" (
+  call :log "init_tables.sql not found: %SCRIPT_DIR%init_tables.sql"
+  exit /b 1
+)
+
+"%MYSQL_BIN%\mysql.exe" -u root --protocol=TCP --host=127.0.0.1 < "%SCRIPT_DIR%init_tables.sql"
+if errorlevel 1 (
+  call :log "init_tables.sql execution failed"
+  exit /b 1
+)
+
+call :log "Database initialized from init_tables.sql"
+exit /b 0
+
+:update_env_file
+set "TMP_PY=%TEMP%\microflyton_update_env_%RANDOM%_%RANDOM%.py"
+
+> "%TMP_PY%" (
+  echo import sys
+  echo from pathlib import Path
+  echo env_file = Path(sys.argv[1])
+  echo text = env_file.read_text(encoding="utf-8") if env_file.exists() else ""
+  echo lines = text.splitlines(True)
+  echo set_keys = {
+  echo ^    "DB_BACKEND": "mysql",
+  echo ^    "hostname": "127.0.0.1",
+  echo ^    "username": "fly",
+  echo ^    "password": "1964",
+  echo ^    "database": "fly",
+  echo ^    "is_mic": "0",
+  echo }
+  echo remove_keys = {"DB_PATH"}
+  echo result = []
+  echo seen = set()
+  echo for line in lines:
+  echo ^    s = line.strip()
+  echo ^    if not s or s.startswith("#") or "=" not in s:
+  echo ^        result.append(line)
+  echo ^        continue
+  echo ^    k, v = s.split("=", 1)
+  echo ^    k = k.strip()
+  echo ^    if k in remove_keys:
+  echo ^        continue
+  echo ^    if k in set_keys:
+  echo ^        result.append(f"{k}={set_keys[k]}\n")
+  echo ^        seen.add(k)
+  echo ^    else:
+  echo ^        result.append(line)
+  echo for k, v in set_keys.items():
+  echo ^    if k not in seen:
+  echo ^        result.append(f"{k}={v}\n")
+  echo env_file.write_text("".join(result), encoding="utf-8")
+  echo print("env updated")
+)
+
+%PY_CMD% "%TMP_PY%" "%ENV_FILE%"
+set "ENV_ERR=%errorlevel%"
+del /f /q "%TMP_PY%" >nul 2>nul
+
+if not "%ENV_ERR%"=="0" (
+  call :log ".env.micro update script failed"
+  exit /b 1
+)
+
+call :log ".env.micro updated for MySQL"
+exit /b 0
+
+:step
+echo.
+echo %~1
+call :log "%~1"
+exit /b 0
+
+:fail
+call :log "FAIL: %~1"
+echo.
+echo ERROR: %~1
+echo See log: %LOG_FILE%
+echo.
+pause
+exit /b 1
+
 :log
-echo [%TIME%] %~1 >> "%LOG_FILE%"
+>> "%LOG_FILE%" echo [%DATE% %TIME%] %~1
 exit /b 0
