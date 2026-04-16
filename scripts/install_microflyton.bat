@@ -217,6 +217,8 @@ if errorlevel 1 (
   exit /b 1
 )
 
+echo "%TEMP%\vc_redist.x64.exe" /install /quiet /norestart
+
 "%TEMP%\vc_redist.x64.exe" /install /quiet /norestart >> "%LOG_FILE%" 2>&1
 if errorlevel 1 (
   call :log "VC++ runtime install returned error"
