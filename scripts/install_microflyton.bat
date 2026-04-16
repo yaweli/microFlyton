@@ -208,6 +208,9 @@ call :log "Python packages installed: mysql-connector-python, requests"
 exit /b 0
 
 :install_vc_runtime
+echo %VC_URL%
+echo "%TEMP%\vc_redist.x64.exe"
+
 curl -L -o "%TEMP%\vc_redist.x64.exe" "%VC_URL%" >> "%LOG_FILE%" 2>&1
 if errorlevel 1 (
   call :log "VC++ runtime download failed"
