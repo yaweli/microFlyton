@@ -1,8 +1,9 @@
 import json, random, string, urllib.request, urllib.error, zipfile
-from pathlib import Path as _Path
-from pathlib import Path
-from tools.sql import *
+from pathlib      import Path as _Path
+from pathlib      import Path
+from tools.sql        import *
 from tools.db_plugins import *
+from tools.kicutil    import *
 
 _root = Path(__file__).resolve().parent.parent.parent.parent
 _lib  = _root / "client" / "lib"
@@ -84,8 +85,8 @@ def sys_plugins2(data):
     pcode  = data.get("plugin_code", "").strip()
     redeem = data.get("redeem", "").strip().upper()
 
-    back_catalog = f"/cgi-bin/p?ses={ses}&rpage=sys_plugins1"
-    back_plugins = f"/cgi-bin/p?ses={ses}&rpage=sys_plugins"
+    back_catalog = "sys_plugins1"
+    back_plugins = "sys_plugins"
 
     catalog = _load_catalog()
     entry   = catalog.get(pcode)
@@ -134,25 +135,22 @@ def sys_plugins2(data):
             return _result(ses, 0, f"Unzip failed: {err}", back_catalog)
 
     singlerun = _root / "client" / "app" / "admin" / "plugins_singlerun.py"
-    print(f"[singlerun] checking {singlerun} exists={singlerun.exists()}")
     if singlerun.exists():
         try:
             import importlib.util as _ilu
             spec = _ilu.spec_from_file_location("plugins_singlerun", singlerun)
             mod  = _ilu.module_from_spec(spec)
             spec.loader.exec_module(mod)
-            print("[singlerun] calling run()...")
             mod.run()
-            print("[singlerun] run() completed OK")
         except Exception as e:
-            print(f"[singlerun] ERROR: {e}")
+            singlerun.unlink(missing_ok=True)
+            return _result(ses, 0, f"Plugin setup failed: {e}", back_catalog)
         singlerun.unlink(missing_ok=True)
-        print("[singlerun] file deleted")
 
     return _result(ses, 1, f"Plugin <b>{pname}</b> installed successfully.", back_plugins)
 
 
-def _result(ses, ok, msg, back_url):
+def _result(ses, ok, msg, back_page):
     icon  = "&#9989;"  if ok else "&#10060;"
     color = "success"  if ok else "danger"
     h = f"""
@@ -162,7 +160,7 @@ def _result(ses, ok, msg, back_url):
             <div class="p-4 text-center">
                 <div style="font-size:3rem">{icon}</div>
                 <div class="mt-3 text-{color}">{msg}</div>
-                <a href="{back_url}" class="btn btn-outline-secondary btn-sm mt-4">&#8592; Back</a>
+                {kicbutton(back_page, ses, "&#8592; Back", "btn btn-outline-secondary btn-sm mt-4")}
             </div>
         </div>
     </div>

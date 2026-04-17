@@ -1,7 +1,8 @@
 import json
-from pathlib import Path
-from tools.sql import *
+from pathlib      import Path
+from tools.sql        import *
 from tools.db_plugins import *
+from tools.kicutil    import *
 
 _lib = Path(__file__).resolve().parent.parent.parent / "lib"
 
@@ -14,8 +15,6 @@ def sys_plugins1(data):
         catalog = json.loads(raw).get("p", [])
     except Exception:
         catalog = []
-
-    back_url = f"/cgi-bin/p?ses={ses}&rpage=sys_plugins"
 
     cards = ""
     for p in catalog:
@@ -63,7 +62,7 @@ def sys_plugins1(data):
     h = f"""
     <div class="col-12 px-4 pt-4">
         <div class="d-flex align-items-center gap-3 mb-4">
-            <a href="{back_url}" class="btn btn-outline-secondary btn-sm">&#8592; Back</a>
+            {kicbutton("sys_plugins", ses, "&#8592; Back", "btn btn-outline-secondary btn-sm")}
             <div class="mf-page-title mb-0">&#129070; Plugin Catalog</div>
         </div>
         <div class="row g-4">
