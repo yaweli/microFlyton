@@ -111,7 +111,7 @@ def sys_plugins2(data):
         pw = redeem[2:]
 
     plp  = _build_plp(pw, pcode)
-    print(f"[install] calling verify server ...")
+    print(f"[install] calling verify server ... plp = {plp}")
 
     resp = _call_verify(plp)
     print(f"[install] verify response={resp}")
