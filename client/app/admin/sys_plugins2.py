@@ -5,9 +5,14 @@ from tools.sql        import *
 from tools.db_plugins import *
 from tools.kicutil    import *
 
-_root = Path(__file__).resolve().parent.parent.parent.parent
-_lib  = _root / "client" / "lib"
-_tmp  = _root / "tmp"
+_root  = Path(__file__).resolve().parent.parent.parent.parent
+_lib   = _root / "client" / "lib"
+_tmp   = _root / "tmp"
+_debug = 0
+
+def _log(msg):
+    if _debug:
+        print(msg)
 
 
 def _load_catalog():
@@ -96,97 +101,97 @@ def sys_plugins2(data):
     pcode  = data.get("plugin_code", "").strip()
     redeem = data.get("redeem", "").strip().upper()
 
-    print(f"[install] START plugin_code={pcode!r} ses={ses!r}")
+    _log(f"[install] START plugin_code={pcode!r} ses={ses!r}")
 
     back_catalog = "sys_plugins1"
     back_plugins = "sys_plugins"
 
     catalog = _load_catalog()
-    print(f"[install] catalog loaded, {len(catalog)} entries, pcode found={pcode in catalog}")
+    _log(f"[install] catalog loaded, {len(catalog)} entries, pcode found={pcode in catalog}")
 
     entry   = catalog.get(pcode)
     if not entry:
-        print(f"[install] ABORT unknown plugin {pcode!r}")
+        _log(f"[install] ABORT unknown plugin {pcode!r}")
         return _result(ses, 0, "Unknown plugin.", back_catalog)
 
     pname = entry.get("name", pcode)
     state = entry.get("state", "public")
-    print(f"[install] plugin name={pname!r} state={state!r}")
+    _log(f"[install] plugin name={pname!r} state={state!r}")
 
     if state == "public":
         pw = "eli"
     else:
         if len(redeem) <= 2:
-            print(f"[install] ABORT invalid redeem code len={len(redeem)}")
+            _log(f"[install] ABORT invalid redeem code len={len(redeem)}")
             return _result(ses, 0, "Invalid redeem code. Please check your code.", back_catalog)
         pw = redeem[2:]
 
     plp  = _build_plp(pw, pcode)
-    print(f"[install] calling verify server ... plp = {plp}")
+    _log(f"[install] calling verify server ... plp = {plp}")
 
     resp = _call_verify(plp)
-    print(f"[install] verify response={resp}")
+    _log(f"[install] verify response={resp}")
 
     check_code = " Please check your code." if state != "public" else ""
 
     if "err" in resp:
-        print(f"[install] ABORT verify error: {resp['err']}")
+        _log(f"[install] ABORT verify error: {resp['err']}")
         return _result(ses, 0, f"{resp['err']}{check_code}", back_catalog)
 
     if resp.get("pas1") != "OK":
-        print(f"[install] ABORT pas1={resp.get('pas1')!r}")
+        _log(f"[install] ABORT pas1={resp.get('pas1')!r}")
         return _result(ses, 0, f"Verification failed.{check_code}", back_catalog)
 
     plugin_url = resp.get("url", "")
-    print(f"[install] verified OK, plugin_url={plugin_url!r}")
+    _log(f"[install] verified OK, plugin_url={plugin_url!r}")
 
     r = plugin_add(pcode)
-    print(f"[install] plugin_add result={r}")
+    _log(f"[install] plugin_add result={r}")
     if not r.get("status"):
         err = r.get("err", "Install failed")
-        print(f"[install] ABORT plugin_add failed: {err}")
+        _log(f"[install] ABORT plugin_add failed: {err}")
         return _result(ses, 0, err, back_catalog)
 
     zip_file = ""
     if plugin_url:
         w = find_in_sql({'table': 'plugins', 'fld': 'plugin_code', 'val': pcode, 'what': 'id'})
-        print(f"[install] db row for plugin: {w}")
+        _log(f"[install] db row for plugin: {w}")
         if w:
             add_to_data("plugins", w[0], "url", plugin_url)
 
-        print(f"[install] downloading {plugin_url!r} ...")
+        _log(f"[install] downloading {plugin_url!r} ...")
         zip_file, err = _wget(plugin_url)
-        print(f"[install] download done zip_file={zip_file!r} err={err!r}")
+        _log(f"[install] download done zip_file={zip_file!r} err={err!r}")
         if err:
             return _result(ses, 0, f"Download failed: {err}", back_catalog)
 
-        print(f"[install] unzipping {zip_file!r} into {_root} ...")
+        _log(f"[install] unzipping {zip_file!r} into {_root} ...")
         err = _unzip(zip_file)
-        print(f"[install] unzip done err={err!r}")
+        _log(f"[install] unzip done err={err!r}")
         if err:
             return _result(ses, 0, f"Unzip failed: {err}", back_catalog)
     else:
-        print(f"[install] no plugin_url, skipping download")
+        _log(f"[install] no plugin_url, skipping download")
 
     singlerun = _root / "client" / "app" / "admin" / "plugins_singlerun.py"
-    print(f"[install] singlerun path={singlerun}  exists={singlerun.exists()}")
+    _log(f"[install] singlerun path={singlerun}  exists={singlerun.exists()}")
     if singlerun.exists():
         try:
             import importlib.util as _ilu
             spec = _ilu.spec_from_file_location("plugins_singlerun", singlerun)
             mod  = _ilu.module_from_spec(spec)
             spec.loader.exec_module(mod)
-            print(f"[install] singlerun loaded, calling run() ...")
+            _log(f"[install] singlerun loaded, calling run() ...")
             mod.run()
-            print(f"[install] singlerun run() OK")
+            _log(f"[install] singlerun run() OK")
         except Exception as e:
-            print(f"[install] ABORT singlerun ERROR: {e}")
+            _log(f"[install] ABORT singlerun ERROR: {e}")
             singlerun.unlink(missing_ok=True)
             return _result(ses, 0, f"Plugin setup failed: {_safe(e)}", back_catalog)
         singlerun.unlink(missing_ok=True)
-        print(f"[install] singlerun file deleted")
+        _log(f"[install] singlerun file deleted")
 
-    print(f"[install] SUCCESS {pname!r}")
+    _log(f"[install] SUCCESS {pname!r}")
     return _result(ses, 1, f"Plugin <b>{pname}</b> installed successfully.", back_plugins)
 
 
