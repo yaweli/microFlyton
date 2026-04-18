@@ -1,4 +1,4 @@
-import json, random, string, urllib.request, urllib.error, zipfile
+import json, random, string, urllib.request, urllib.error, zipfile, ssl, html
 from pathlib      import Path as _Path
 from pathlib      import Path
 from tools.sql        import *
@@ -45,30 +45,41 @@ def _build_plp(pw, pcode):
     return f"{num}/{pcode}/{encoded_pw}"
 
 
+def _nossl():
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode    = ssl.CERT_NONE
+    return ctx
+
+def _safe(e):
+    return html.escape(str(e))
+
 def _call_verify(plp):
     url = f"https://x.yaw.red/cgi-bin/micro_f_plugin?PlP={plp}"
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "MicroFlyton/1.0"})
-        with urllib.request.urlopen(req, timeout=10) as r:
+        with urllib.request.urlopen(req, timeout=10, context=_nossl()) as r:
             return json.loads(r.read().decode("utf-8"))
     except Exception as e:
-        return {"err": str(e)}
+        return {"err": _safe(e)}
 
 
 def _wget(url):
     _tmp.mkdir(parents=True, exist_ok=True)
     filename = str(_tmp / url.split("/")[-1])
     try:
-        urllib.request.urlretrieve(url, filename)
+        opener = urllib.request.build_opener(urllib.request.HTTPSHandler(context=_nossl()))
+        with opener.open(url, timeout=30) as r, open(filename, "wb") as f:
+            f.write(r.read())
         if not _Path(filename).exists() or _Path(filename).stat().st_size == 0:
             return filename, "file empty or missing after download"
         return filename, ""
     except urllib.error.HTTPError as e:
-        return filename, f"HTTP {e.code}: {e.reason}"
+        return filename, f"HTTP {e.code}: {_safe(e.reason)}"
     except urllib.error.URLError as e:
-        return filename, f"URL error: {e.reason}"
+        return filename, f"URL error: {_safe(e.reason)}"
     except Exception as e:
-        return filename, str(e)
+        return filename, _safe(e)
 
 
 def _unzip(zip_path):
@@ -77,7 +88,7 @@ def _unzip(zip_path):
             z.extractall(_root)
         return ""
     except Exception as e:
-        return str(e)
+        return _safe(e)
 
 
 def sys_plugins2(data):
@@ -171,7 +182,7 @@ def sys_plugins2(data):
         except Exception as e:
             print(f"[install] ABORT singlerun ERROR: {e}")
             singlerun.unlink(missing_ok=True)
-            return _result(ses, 0, f"Plugin setup failed: {e}", back_catalog)
+            return _result(ses, 0, f"Plugin setup failed: {_safe(e)}", back_catalog)
         singlerun.unlink(missing_ok=True)
         print(f"[install] singlerun file deleted")
 
