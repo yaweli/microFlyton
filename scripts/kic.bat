@@ -192,8 +192,8 @@ if errorlevel 1 (
 )
 
 echo.
-echo Re-applying install setup...
-call "%SCRIPT_DIR%install_microflyton.bat"
+echo Re-applying install setup (database will not be touched)...
+call "%SCRIPT_DIR%install_microflyton.bat" update
 if errorlevel 1 (
   echo.
   echo Install refresh failed after pull.

@@ -11,6 +11,7 @@ if errorlevel 1 (
 
 set "SCRIPT_DIR=%~dp0"
 for %%I in ("%SCRIPT_DIR%..") do set "APP_DIR=%%~fI"
+set "MODE=%~1"
 
 set "ENV_FILE=%APP_DIR%\.env.micro"
 set "LOG_FILE=%APP_DIR%\install.log"
@@ -90,11 +91,20 @@ if errorlevel 1 (
   exit /b 1
 )
 
-call :step "[8/9] Initializing database and tables..."
-call :init_database
-if errorlevel 1 (
-  call :fail "Database initialization failed"
-  exit /b 1
+if /i "!MODE!"=="update" (
+  call :step "[8/9] Updating database schema (existing data preserved)..."
+  call :update_database
+  if errorlevel 1 (
+    call :fail "Database schema update failed"
+    exit /b 1
+  )
+) else (
+  call :step "[8/9] Initializing database and tables..."
+  call :init_database
+  if errorlevel 1 (
+    call :fail "Database initialization failed"
+    exit /b 1
+  )
 )
 
 call :step "[9/9] Updating .env.micro for MySQL..."
@@ -366,6 +376,22 @@ if errorlevel 1 (
 )
 
 call :log "Database initialized from init_tables.sql"
+exit /b 0
+
+:update_database
+if not exist "%SCRIPT_DIR%init_tables.sql" (
+  call :log "init_tables.sql not found: %SCRIPT_DIR%init_tables.sql"
+  exit /b 1
+)
+
+call :log "Running init_tables.sql (schema update only, no DROP)"
+"%MYSQL_BIN%\mysql.exe" -u root --protocol=TCP --host=127.0.0.1 fly < "%SCRIPT_DIR%init_tables.sql" >> "%LOG_FILE%" 2>&1
+if errorlevel 1 (
+  call :log "init_tables.sql schema update failed"
+  exit /b 1
+)
+
+call :log "Database schema updated from init_tables.sql"
 exit /b 0
 
 :update_env_file
