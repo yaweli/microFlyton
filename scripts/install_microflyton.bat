@@ -33,17 +33,17 @@ set "PIP_CMD="
   echo ==============================
 )
 
-call :step "[1/9] Validating environment file..."
+call :step "[1/10] Validating environment file..."
 if not exist "%ENV_FILE%" (
   call :fail "Environment file not found: %ENV_FILE%"
   exit /b 1
 )
 call :log "Environment file exists"
 
-call :step "[2/9] Resolving Python..."
+call :step "[2/10] Resolving Python..."
 call :resolve_python
 if errorlevel 1 (
-  call :step "[2/9] Python not usable - installing Python 3.11..."
+  call :step "[2/10] Python not usable - installing Python 3.11..."
   call :install_python
   if errorlevel 1 (
     call :fail "Python installation failed"
@@ -56,35 +56,35 @@ if errorlevel 1 (
   )
 )
 
-call :step "[3/9] Ensuring pip is ready..."
+call :step "[3/10] Ensuring pip is ready..."
 call :ensure_pip
 if errorlevel 1 (
   call :fail "pip is not available"
   exit /b 1
 )
 
-call :step "[4/9] Installing Python packages..."
+call :step "[4/10] Installing Python packages..."
 call :install_python_packages
 if errorlevel 1 (
   call :fail "Could not install required Python packages"
   exit /b 1
 )
 
-call :step "[5/9] Installing Microsoft VC++ Runtime..."
+call :step "[5/10] Installing Microsoft VC++ Runtime..."
 call :install_vc_runtime
 if errorlevel 1 (
   call :fail "Could not install Microsoft VC++ Runtime"
   exit /b 1
 )
 
-call :step "[6/9] Installing / starting MySQL..."
+call :step "[6/10] Installing / starting MySQL..."
 call :install_mysql
 if errorlevel 1 (
   call :fail "MySQL installation/startup failed"
   exit /b 1
 )
 
-call :step "[7/9] Creating required directories and symlink..."
+call :step "[7/10] Creating required directories and symlink..."
 call :prepare_directories
 if errorlevel 1 (
   call :fail "Could not prepare folders or symlink"
@@ -92,14 +92,14 @@ if errorlevel 1 (
 )
 
 if /i "!MODE!"=="update" (
-  call :step "[8/9] Updating database schema (existing data preserved)..."
+  call :step "[8/10] Updating database schema (existing data preserved)..."
   call :update_database
   if errorlevel 1 (
     call :fail "Database schema update failed"
     exit /b 1
   )
 ) else (
-  call :step "[8/9] Initializing database and tables..."
+  call :step "[8/10] Initializing database and tables..."
   call :init_database
   if errorlevel 1 (
     call :fail "Database initialization failed"
@@ -107,10 +107,17 @@ if /i "!MODE!"=="update" (
   )
 )
 
-call :step "[9/9] Updating .env.micro for MySQL..."
+call :step "[9/10] Updating .env.micro for MySQL..."
 call :update_env_file
 if errorlevel 1 (
   call :fail "Failed to update .env.micro"
+  exit /b 1
+)
+
+call :step "[10/10] Adding scripts folder to system PATH..."
+call :add_to_path
+if errorlevel 1 (
+  call :fail "Failed to add scripts folder to PATH"
   exit /b 1
 )
 
@@ -392,6 +399,22 @@ if errorlevel 1 (
 )
 
 call :log "Database schema updated from init_tables.sql"
+exit /b 0
+
+:add_to_path
+set "SCRIPTS_DIR_NORM=%SCRIPT_DIR:~0,-1%"
+for /f "usebackq skip=2 tokens=2*" %%A in (`reg query "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v Path 2^>nul`) do set "SYS_PATH=%%B"
+echo "!SYS_PATH!" | findstr /i /c:"%SCRIPTS_DIR_NORM%" >nul 2>nul
+if not errorlevel 1 (
+  call :log "Scripts folder already in system PATH"
+  exit /b 0
+)
+powershell -Command "[Environment]::SetEnvironmentVariable('Path', [Environment]::GetEnvironmentVariable('Path','Machine') + ';%SCRIPTS_DIR_NORM%', 'Machine')" >> "%LOG_FILE%" 2>&1
+if errorlevel 1 (
+  call :log "Failed to update system PATH"
+  exit /b 1
+)
+call :log "Added to system PATH: %SCRIPTS_DIR_NORM%"
 exit /b 0
 
 :update_env_file
