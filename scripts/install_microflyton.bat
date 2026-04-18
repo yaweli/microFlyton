@@ -209,12 +209,12 @@ for /f "tokens=*" %%V in ('%PY_CMD% -m pip --version 2^>^&1') do call :log "Usin
 exit /b 0
 
 :install_python_packages
-%PY_CMD% -m pip install mysql-connector-python requests >> "%LOG_FILE%" 2>&1
+%PY_CMD% -m pip install mysql-connector-python requests pyopenssl >> "%LOG_FILE%" 2>&1
 if errorlevel 1 (
-  call :log "pip install mysql-connector-python requests failed"
+  call :log "pip install mysql-connector-python requests pyopenssl failed"
   exit /b 1
 )
-call :log "Python packages installed: mysql-connector-python, requests"
+call :log "Python packages installed: mysql-connector-python, requests, pyopenssl"
 exit /b 0
 
 :install_vc_runtime
