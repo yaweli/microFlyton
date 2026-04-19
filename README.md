@@ -9,8 +9,8 @@ microFlyton is a lightweight, self-contained edition of the [Flyton](https://git
 
 ## Requirements
 - Windows
-- Python 3.10+
-- MySQL server running locally
+- Python 3.10+ (installed in the installation script)
+- MySQL server running locally (installed in the installation script)
 - `mysql-connector-python` package (`pip install mysql-connector-python`)
 
 ---
