@@ -38,6 +38,21 @@ def header(data):
     pages     = sorted(pages_obj.items(), key=lambda kv: kv[1].get("order", 99))
     nav_items = "".join(_nav_item(ses, page, tab, current_page, uid) for page, tab in pages)
 
+    # resolve cust_id: from user data -> write to session if missing
+    user_data = get_data("users", uid)
+    cust_id   = user_data.get("cust_id", None)
+    if cust_id and not data["s"].get("cust_id"):
+        add_to_data("ses", ses, "cust_id", cust_id)
+        data["s"]["cust_id"] = cust_id
+    cust_id = data["s"].get("cust_id", cust_id)
+
+    # brand title: customer name if cust table + record exist, else fallback
+    brand_name = "MicroFlyton"
+    if cust_id:
+        cust_row = find_in_sql({'table': 'cust', 'fld': 'id', 'val': int(cust_id), 'what': 'name'})
+        if cust_row and type(cust_row) is tuple:
+            brand_name = cust_row[0] or brand_name
+
     project_name = g.get("name", {}).get("val", "")
     project_html = f'<span class="text-white-50 me-2" style="font-size:13px;">{project_name}</span>' if project_name else ""
 
@@ -50,7 +65,7 @@ def header(data):
      {kicbutton0()} 
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3">
         <a class="navbar-brand fw-bold" href="/cgi-bin/p?ses={ses}&rpage=dashboard">
-            &#9670; MicroFlyton
+            &#9670; {brand_name}
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu">
             <span class="navbar-toggler-icon"></span>
