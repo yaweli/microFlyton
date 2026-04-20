@@ -40,7 +40,7 @@ def header(data):
 
     # resolve cust_id: from user data -> write to session if missing
     user_data = get_data("users", uid)
-    cust_id   = user_data.get("cust_id", None)
+    cust_id   = user_data.get("cust", None)
     if cust_id and not data["s"].get("cust_id"):
         add_to_data("ses", ses, "cust_id", cust_id)
         data["s"]["cust_id"] = cust_id
