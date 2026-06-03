@@ -38,6 +38,16 @@ def header(data):
     pages     = sorted(pages_obj.items(), key=lambda kv: kv[1].get("order", 99))
     nav_items = "".join(_nav_item(ses, page, tab, current_page, uid) for page, tab in pages)
 
+    pages_skip = g.get("pages_skip",[])
+    for p in pages_skip:
+        if current_page.startswith(p):
+            print(f"""
+               {kicbutton0()} 
+               """)
+            return
+            
+
+
     # resolve cust_id: from user data -> write to session if missing
     user_data = get_data("users", uid)
     cust_id   = user_data.get("cust", None)
