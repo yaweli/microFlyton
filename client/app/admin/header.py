@@ -38,7 +38,7 @@ def header(data):
     pages     = sorted(pages_obj.items(), key=lambda kv: kv[1].get("order", 99))
     nav_items = "".join(_nav_item(ses, page, tab, current_page, uid) for page, tab in pages)
 
-    pages_skip = g.get("pages_skip",[])
+    pages_skip = g.get("pages_skip",{}).get("data",[])
     for p in pages_skip:
         if current_page.startswith(p):
             print(f"""

@@ -5,7 +5,7 @@ def footer(data):
 
     current_page = data.get("rpage", data["s"].get("page", "dashboard"))
     g         = gen_data()
-    pages_skip = g.get("pages_skip",[])
+    pages_skip = g.get("pages_skip",{}).get("data",[])
     for p in pages_skip:
         if current_page.startswith(p):
             return
