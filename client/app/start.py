@@ -46,6 +46,9 @@ def main(data):
     # default first time page
     if not "page" in data["s"]:
         data["s"]["page"]="dashboard"
+        gen = gen_data()
+        if "autostart" in gen:
+            data["s"]["page"]=gen["autostart"]["val"]
 
     print("""<!doctype html>
 <html lang="en">
